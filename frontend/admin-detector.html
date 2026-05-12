@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="admin">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Detector - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: var(--sidebar-bg); border-right: 1px solid var(--border-subtle); position: fixed; height: 100vh; z-index: 100; padding: 24px 0; }
+        .main-content { margin-left: 260px; flex: 1; padding: 24px; }
+        .detector-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .fraud-score { font-size: 3rem; font-weight: bold; font-family:'Orbitron'; color: #ef4444; }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div style="padding: 0 24px 24px; font-weight: bold; font-family:'Orbitron';">SCS ADMIN</div>
+        <nav>
+            <a href="admin-dashboard.html" class="nav-item"><span>Control Center</span></a>
+            <a href="admin-detector.html" class="nav-item active"><span>Fake Detector</span></a>
+            <a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-item"><span>Logout</span></a>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <h2 style="font-family:'Orbitron'; margin-bottom: 32px;">AI FAKE DETECTOR HUB</h2>
+        <div class="detector-grid">
+            <div class="card animate-fade-in-up">
+                <h3 style="margin-bottom: 16px;">HIGH RISK SUBMISSION</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                    <div>
+                        <div class="muted">Case ID: COMP-2026-X1Y2</div>
+                        <div class="fraud-score">92%</div>
+                        <div style="color:#ef4444; font-weight:bold;">LIKELY FRAUDULENT</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <button class="btn-primary" style="background:#ef4444; border:none; margin-bottom:8px; width:100%;">REJECT NOW</button>
+                        <button class="btn-outline" style="width:100%;">MANUAL REVIEW</button>
+                    </div>
+                </div>
+                <div style="background:rgba(0,0,0,0.2); padding:16px; border-radius:8px;">
+                    <p class="white">"I won 10 million dollars from a lottery and then they stole my pass. please help me i need money."</p>
+                    <div style="margin-top:12px; display:flex; gap:8px;">
+                        <span class="badge" style="background:rgba(239,68,68,0.2); color:#ef4444;">Spam Keywords</span>
+                        <span class="badge" style="background:rgba(239,68,68,0.2); color:#ef4444;">Short Description</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card animate-fade-in-up" style="animation-delay:0.2s;">
+                <h3 style="margin-bottom: 16px;">NETWORK ANALYSIS</h3>
+                <div style="height:200px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border-subtle); border-radius:12px;">
+                    <div class="muted">Device Fingerprint Match: 4 accounts found</div>
+                </div>
+                <div style="margin-top:20px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:12px;"><span>IP Reputation</span><span style="color:#ef4444;">BLACKLISTED</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Submission Speed</span><span style="color:#ffaa00;">BOT-LIKE</span></div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>if (!guardPage('admin')) { }</script>
+</body>
+</html>

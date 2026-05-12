@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background: rgba(0,5,30,0.95); backdrop-filter: blur(20px); border-right: 1px solid var(--border-neon); position: fixed; height: 100vh; z-index: 100; padding: 20px 0; }
+        .sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid rgba(0,200,255,0.15); display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-weight: bold; }
+        .nav-item { list-style: none; margin-bottom: 4px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text-secondary); text-decoration: none; transition: 0.2s; }
+        .nav-link.active { border-left: 4px solid var(--neon-cyan); background: rgba(0,212,255,0.1); color: white; }
+        .main-content { margin-left: 280px; flex: 1; padding: 24px; }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="avatar" id="userInitials">US</div>
+            <div>
+                <div style="font-weight: bold;" id="userNameDisplay">User</div>
+                <div style="color: #00ff88; font-size: 0.8rem;">● Online</div>
+            </div>
+        </div>
+        <ul>
+            <li class="nav-item"><a href="dashboard.html" class="nav-link">🏠 Dashboard</a></li>
+            <li class="nav-item"><a href="file-complaint.html" class="nav-link">📝 File Complaint</a></li>
+            <li class="nav-item"><a href="my-complaints.html" class="nav-link">📋 My Complaints</a></li>
+            <li class="nav-item"><a href="analytics.html" class="nav-link">📊 Analytics</a></li>
+            <li class="nav-item"><a href="chat.html" class="nav-link">💬 Chat Support</a></li>
+            <li class="nav-item"><a href="forum.html" class="nav-link active">🏛️ Forum</a></li>
+            <li class="nav-item"><a href="profile.html" class="nav-link">👤 Profile</a></li>
+            <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
+            <li class="nav-item"><a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-link">🚪 Logout</a></li>
+        </ul>
+    </aside>
+    <main class="main-content">
+        <h2 style="font-family:'Orbitron'; margin-bottom: 24px;">COMMUNITY FORUM</h2>
+        <div class="card animate-fade-in-up" style="text-align:center; padding:100px 20px;">
+            <div style="font-size:4rem; margin-bottom:20px;">🏛️</div>
+            <h3 style="font-family:'Orbitron';">FORUM TEMPORARILY OFFLINE</h3>
+            <p class="muted" style="margin-top:10px;">We are migrating the community discussions to a more secure platform.</p>
+            <button class="btn-primary" style="margin-top:32px;" onclick="window.location.href='dashboard.html'">BACK TO DASHBOARD</button>
+        </div>
+    </main>
+</div>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+    if (!guardPage('user')) { }
+</script>
+</body>
+</html>

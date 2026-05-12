@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="admin">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        body { margin: 0; padding: 0; background: var(--bg-primary); }
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: var(--sidebar-bg); position: fixed; height: 100vh; z-index: 100; transition: 0.3s; padding: 0; border-right: 1px solid var(--border-subtle); }
+        .sidebar-header { padding: 24px; display: flex; align-items: center; gap: 12px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; margin: 4px 12px; border-radius: 8px; color: var(--text-secondary); text-decoration: none; transition: all 0.2s ease; position: relative; font-size: 14px; }
+        .nav-item.active { background: rgba(217,70,239,0.15); color: var(--neon-primary); box-shadow: inset 3px 0 0 var(--neon-primary); }
+        .main-content { margin-left: 260px; flex: 1; padding: 0 0 24px 0; background: var(--bg-primary); }
+        .topbar { height: 64px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 99; }
+        .content-container { padding: 24px; }
+        .table-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { text-align: left; padding: 16px; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border-subtle); }
+        .data-table td { padding: 16px; font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); }
+        .log-action { font-weight: bold; color: var(--neon-primary); }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div style="font-weight: bold; color: white;">Administrator</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="admin-dashboard.html" class="nav-item"><span>Control Center</span></a>
+            <a href="admin-complaints.html" class="nav-item"><span>All Complaints</span></a>
+            <a href="admin-users.html" class="nav-item"><span>User Management</span></a>
+            <a href="admin-heatmap.html" class="nav-item"><span>Crime Heatmap</span></a>
+            <a href="admin-audit.html" class="nav-item active"><span>Audit Logs</span></a>
+            <div class="nav-divider"></div>
+            <a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-item"><span>System Exit</span></a>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <header class="topbar">
+            <div class="breadcrumb"><span class="breadcrumb-item">Admin</span> / <span class="breadcrumb-item active">Audit Logs</span></div>
+            <div id="sysTime"></div>
+        </header>
+        <div class="content-container">
+            <div class="table-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Admin ID</th>
+                            <th>Action</th>
+                            <th>Target</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTable">
+                        <tr><td colspan="5" style="text-align:center; padding:40px;">Fetching logs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+    if (!guardPage('admin')) { }
+    async function loadLogs() {
+        try {
+            const logs = await apiCall('/admin/audit-logs');
+            const tbody = document.getElementById('logsTable');
+            tbody.innerHTML = '';
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px;">No audit logs available.</td></tr>';
+                return;
+            }
+            logs.forEach(l => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="muted">${new Date(l.timestamp).toLocaleString()}</td>
+                    <td>${l.adminId}</td>
+                    <td><span class="log-action">${l.action}</span></td>
+                    <td class="mono">${l.targetId}</td>
+                    <td>${l.details || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch(e) { console.error(e); }
+    }
+    window.onload = loadLogs;
+    setInterval(() => { document.getElementById('sysTime').innerText = new Date().toISOString().substring(0,19); }, 1000);
+</script>
+</body>
+</html>

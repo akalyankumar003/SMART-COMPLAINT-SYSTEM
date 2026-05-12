@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background: rgba(0,5,30,0.95); backdrop-filter: blur(20px); border-right: 1px solid var(--border-neon); position: fixed; height: 100vh; z-index: 100; padding: 20px 0; }
+        .main-content { margin-left: 280px; flex: 1; padding: 24px; }
+        .notif-card { background: var(--bg-card); border: 1px solid var(--border-neon); border-radius: 12px; padding: 20px; margin-bottom: 16px; display: flex; gap: 16px; align-items: flex-start; transition: 0.3s; }
+        .notif-card:hover { transform: translateX(5px); background: rgba(0,212,255,0.05); }
+        .notif-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .notif-new { border-left: 4px solid var(--neon-cyan); }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div style="padding: 0 20px 20px; font-weight: bold; font-family:'Orbitron';">SCS PORTAL</div>
+        <nav>
+            <a href="dashboard.html" class="nav-item">🏠 Dashboard</a>
+            <a href="my-complaints.html" class="nav-item">📋 My Complaints</a>
+            <a href="profile.html" class="nav-item">👤 My Profile</a>
+            <a href="notifications.html" class="nav-item active">🔔 Notifications</a>
+            <a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-item">🚪 Logout</a>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <h2 style="font-family:'Orbitron'; margin-bottom: 32px;">NOTIFICATIONS</h2>
+        <div id="notifList">
+            <div class="notif-card notif-new">
+                <div class="notif-icon" style="background: rgba(0,255,136,0.1); color: #00ff88;">✅</div>
+                <div>
+                    <div style="font-weight:bold; color:white; margin-bottom:4px;">Complaint Accepted</div>
+                    <div class="muted" style="font-size:0.9rem;">Your complaint COMP-2026-X1Y2 has been accepted for investigation.</div>
+                    <div class="muted" style="font-size:0.75rem; margin-top:8px;">2 hours ago</div>
+                </div>
+            </div>
+            <div class="notif-card">
+                <div class="notif-icon" style="background: rgba(0,212,255,0.1); color: var(--neon-cyan);">🤖</div>
+                <div>
+                    <div style="font-weight:bold; color:white; margin-bottom:4px;">AI Analysis Complete</div>
+                    <div class="muted" style="font-size:0.9rem;">AI has suggested 3 legal sections for your recent filing.</div>
+                    <div class="muted" style="font-size:0.75rem; margin-top:8px;">Yesterday</div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+    if (!guardPage('user')) { }
+    // Fetch notifications from API in real implementation
+</script>
+</body>
+</html>

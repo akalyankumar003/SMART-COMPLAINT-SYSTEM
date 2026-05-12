@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        :root {
+            --neon-cyan: #7b2fff; /* swap primary accent to purple */
+        }
+        .login-layout { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+        .hero-side { position: relative; overflow: hidden; }
+        .hero-content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 40px; text-align: center; }
+        .hero-content h1 { font-size: 2.5rem; margin-bottom: 16px; color: var(--neon-cyan); }
+        .hero-content p { color: var(--text-secondary); font-size: 1.2rem; margin-bottom: 40px; }
+        
+        .form-side { display: flex; align-items: center; justify-content: center; background: rgba(0,0,50,0.3); backdrop-filter: blur(10px); flex-direction: column; padding: 20px;}
+        .login-card { max-width: 460px; width: 100%; border-color: rgba(123,47,255,0.4); }
+        .login-card h2 { color: var(--neon-cyan); text-align: center; font-size: 2rem; margin-bottom: 8px; animation: glow-text 2s infinite; }
+        .login-card p.subtitle { text-align: center; color: var(--text-muted); margin-bottom: 32px; }
+        .form-actions { margin-top: 24px; }
+        .btn-full { width: 100%; margin-bottom: 16px; background: linear-gradient(135deg, #7b2fff, #00d4ff); }
+        .bottom-links { text-align: center; margin-top: 24px; font-size: 0.9rem; }
+        #particles { position: absolute; inset: 0; z-index: 1; }
+        
+        @media (max-width: 768px) {
+            .login-layout { grid-template-columns: 1fr; }
+            .hero-side { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-layout">
+    <div class="hero-side">
+        <canvas id="particles"></canvas>
+        <div class="hero-content">
+            <div style="font-size: 4rem; color: #7b2fff; margin-bottom: 20px;">🛡️★</div>
+            <h1 class="animate-slide-in-left">ADMIN CONTROL CENTER</h1>
+            <p class="animate-slide-in-right">Smart Complaint System — Administration</p>
+        </div>
+    </div>
+    
+    <div class="form-side">
+        <div class="card login-card">
+            <h2>ADMIN LOGIN</h2>
+            <p class="subtitle">Secure access for authorized personnel only</p>
+            
+            <form id="loginForm" data-admin="true">
+                <div class="form-group has-icon">
+                    <span class="form-icon">👤</span>
+                    <input type="text" id="identifier" placeholder="Admin Username" required>
+                </div>
+                <div class="form-group has-icon">
+                    <span class="form-icon">🔒</span>
+                    <input type="password" id="password" placeholder="Password" required>
+                    <button type="button" id="togglePassword" style="position:absolute; right:12px; top:38px; background:none; border:none; color:var(--text-muted); cursor:pointer;">👁️</button>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Default: admin / admin</div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary btn-full">SECURE LOGIN</button>
+                </div>
+                
+                <div class="bottom-links">
+                    <a href="login.html">← Back to User Login</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script>
+    // Particle background (purple dominant)
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth / 2;
+    let height = canvas.height = window.innerHeight;
+    
+    window.addEventListener('resize', () => {
+        if(window.innerWidth > 768) {
+            width = canvas.width = window.innerWidth / 2;
+            height = canvas.height = window.innerHeight;
+        }
+    });
+
+    const particlesArray = [];
+    for(let i=0; i<80; i++) {
+        particlesArray.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            vx: (Math.random() - 0.5) * 1,
+            vy: (Math.random() - 0.5) * 1,
+            size: Math.random() * 2 + 1,
+            color: Math.random() > 0.2 ? '#7b2fff' : '#00d4ff'
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, width, height);
+        particlesArray.forEach((p, i) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            if(p.x < 0 || p.x > width) p.vx *= -1;
+            if(p.y < 0 || p.y > height) p.vy *= -1;
+            
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+            
+            for(let j=i+1; j<particlesArray.length; j++) {
+                const p2 = particlesArray[j];
+                const dx = p.x - p2.x;
+                const dy = p.y - p2.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if(dist < 120) {
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.strokeStyle = \`rgba(123, 47, 255, \${1 - dist/120})\`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+        });
+        requestAnimationFrame(draw);
+    }
+    draw();
+</script>
+</body>
+</html>

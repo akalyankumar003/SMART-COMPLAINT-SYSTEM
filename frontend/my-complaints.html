@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Complaints - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background: rgba(0,5,30,0.95); backdrop-filter: blur(20px); border-right: 1px solid var(--border-neon); position: fixed; height: 100vh; z-index: 100; padding: 20px 0; }
+        .sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid rgba(0,200,255,0.15); display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-weight: bold; }
+        .nav-item { list-style: none; margin-bottom: 4px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text-secondary); text-decoration: none; transition: 0.2s; }
+        .nav-link.active { border-left: 4px solid var(--neon-cyan); background: rgba(0,212,255,0.1); color: white; }
+        
+        .main-content { margin-left: 280px; flex: 1; padding: 24px; }
+        .topbar { height: 64px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,200,255,0.15); margin-bottom: 24px; padding-bottom: 20px; }
+        
+        .filter-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+        .filter-pill { background: transparent; border: 1px solid var(--border-neon); color: var(--text-secondary); padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+        .filter-pill.active { background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); color: white; border-color: transparent; }
+        
+        .neon-table { width: 100%; border-collapse: collapse; }
+        .neon-table th { font-family: 'Orbitron'; color: var(--neon-cyan); text-align: left; padding: 12px; border-bottom: 1px solid rgba(0,200,255,0.2); }
+        .neon-table td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .neon-table tr:hover td { background: rgba(0,212,255,0.05); }
+        
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .status-badge.pending { background: rgba(255,170,0,0.2); border: 1px solid #ffaa00; color: #ffaa00; }
+        .status-badge.resolved { background: rgba(0,255,136,0.2); border: 1px solid #00ff88; color: #00ff88; }
+        .status-badge.withdrawn { background: rgba(255,255,255,0.1); border: 1px solid #999; color: #999; }
+        
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="avatar" id="userInitials">US</div>
+            <div>
+                <div style="font-weight: bold;" id="userNameDisplay">User</div>
+                <div style="color: #00ff88; font-size: 0.8rem;">● Online</div>
+            </div>
+        </div>
+        <ul>
+            <li class="nav-item"><a href="dashboard.html" class="nav-link">🏠 Dashboard</a></li>
+            <li class="nav-item"><a href="file-complaint.html" class="nav-link">📝 File Complaint</a></li>
+            <li class="nav-item"><a href="my-complaints.html" class="nav-link active">📋 My Complaints</a></li>
+            <li class="nav-item"><a href="javascript:void(0)" onclick="comingSoon('Analytics')" class="nav-link">📊 Analytics</a></li>
+            <li class="nav-item"><a href="chat.html" class="nav-link">💬 Chat Support</a></li>
+            <li class="nav-item"><a href="javascript:void(0)" onclick="comingSoon('Forum')" class="nav-link">🏛️ Forum</a></li>
+            <li class="nav-item"><a href="profile.html" class="nav-link">👤 Profile</a></li>
+            <li class="nav-item"><a href="javascript:void(0)" onclick="comingSoon('Notifications')" class="nav-link">🔔 Notifications</a></li>
+            <li class="nav-item"><a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-link">🚪 Logout</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="muted">Home > My Complaints</div>
+            <button class="btn-outline" style="padding: 8px 16px;">📊 EXPORT CSV</button>
+        </header>
+
+        <h2 style="margin-bottom: 24px; font-family: 'Orbitron';">MY COMPLAINTS <span id="countBadge" style="background:var(--neon-cyan); color:black; padding:2px 8px; border-radius:12px; font-size:1rem; vertical-align:middle;">0</span></h2>
+
+        <div class="card" style="margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(90deg, rgba(0,5,30,1) 0%, rgba(0,212,255,0.05) 100%);">
+            <div>
+                <h3 style="font-family: 'Orbitron'; color: var(--neon-cyan); margin-bottom: 8px;">TRACK COMPLAINT</h3>
+                <p class="muted" style="font-size: 0.9rem;">Enter your Complaint ID to view live status and updates</p>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <input type="text" id="trackIdInput" placeholder="e.g. SCS-2025-00001" style="width: 250px; padding: 12px 16px;">
+                <button class="btn-primary" onclick="if(document.getElementById('trackIdInput').value) window.location.href='user-tracker.html?id=' + document.getElementById('trackIdInput').value">TRACK 📍</button>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <button class="filter-pill active">ALL</button>
+            <button class="filter-pill">PENDING</button>
+            <button class="filter-pill">IN PROGRESS</button>
+            <button class="filter-pill">RESOLVED</button>
+            <input type="text" id="searchInput" placeholder="Search ID or title..." style="width: 250px; padding: 8px 16px; margin-left: auto;">
+        </div>
+
+        <div class="card animate-fade-in-up">
+            <table class="neon-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Category</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Filed Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="complaintsTableBody">
+                    <tr><td colspan="6" style="text-align:center;">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+    if (!guardPage('user')) { /* stops execution */ }
+
+    async function loadComplaints() {
+        try {
+            const complaints = await apiCall('/complaints?limit=50');
+            const tbody = document.getElementById('complaintsTableBody');
+            tbody.innerHTML = '';
+            document.getElementById('countBadge').innerText = complaints.length;
+            
+            if (complaints.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No complaints found.</td></tr>';
+                return;
+            }
+            
+            complaints.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="mono"><a href="user-tracker.html?id=${c.complaintId}" class="cyan">${c.complaintId}</a></td>
+                    <td>${c.category}</td>
+                    <td>${escapeHtml(c.title).substring(0, 40)}${c.title.length > 40 ? '...' : ''}</td>
+                    <td><span class="status-badge ${c.status.toLowerCase()}">${c.status}</span></td>
+                    <td>${new Date(c.createdAt).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn-outline" style="padding:4px 12px; font-size:0.8rem;" onclick="window.location.href='user-tracker.html?id=${c.complaintId}'">Track 📍</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+        } catch(e) {
+            console.error(e);
+            showToast('Failed to load complaints: ' + e.message, 'error');
+        }
+    }
+    
+    loadComplaints();
+    
+    // Wire up search and filter
+    const searchInput = document.getElementById('searchInput');
+    const filterPills = document.querySelectorAll('.filter-pill');
+    let currentFilter = 'ALL';
+
+    function applyFilters() {
+        const query = searchInput.value.toLowerCase();
+        const rows = document.querySelectorAll('#complaintsTableBody tr');
+        rows.forEach(row => {
+            if (row.cells.length < 6) return; // Skip "No complaints found" row
+            const idText = row.cells[0].innerText.toLowerCase();
+            const titleText = row.cells[2].innerText.toLowerCase();
+            const statusText = row.cells[3].innerText.toUpperCase();
+            
+            const matchesSearch = idText.includes(query) || titleText.includes(query);
+            const matchesFilter = currentFilter === 'ALL' || statusText.includes(currentFilter);
+            
+            if (matchesSearch && matchesFilter) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+
+    filterPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+            filterPills.forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            currentFilter = pill.innerText.trim();
+            applyFilters();
+        });
+    });
+</script>
+</body>
+</html>

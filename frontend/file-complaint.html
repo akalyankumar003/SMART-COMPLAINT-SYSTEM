@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Complaint - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background: rgba(0,5,30,0.95); backdrop-filter: blur(20px); border-right: 1px solid var(--border-neon); position: fixed; height: 100vh; z-index: 100; transition: 0.3s; padding: 20px 0; }
+        .sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid rgba(0,200,255,0.15); display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-weight: bold; border: 2px solid var(--neon-cyan); }
+        .nav-item { list-style: none; margin-bottom: 4px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text-secondary); text-decoration: none; transition: 0.2s; }
+        .nav-link:hover { background: rgba(0,212,255,0.05); color: white; }
+        .nav-link.active { border-left: 4px solid var(--neon-cyan); background: rgba(0,212,255,0.1); color: white; }
+        .main-content { margin-left: 280px; flex: 1; padding: 24px; }
+        .topbar { height: 64px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,200,255,0.15); margin-bottom: 24px; padding-bottom: 20px; }
+        
+        .wizard-container { max-width: 900px; margin: 0 auto; }
+        .step-indicator { display: flex; justify-content: space-between; position: relative; margin-bottom: 40px; }
+        .step-indicator::before { content: ''; position: absolute; top: 20px; left: 40px; right: 40px; height: 2px; background: var(--border-neon); z-index: 1; }
+        .step-circle { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--border-neon); display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; font-family: 'Orbitron'; font-weight: bold; transition: 0.3s; }
+        .step-circle.active { border-color: var(--neon-cyan); box-shadow: 0 0 15px rgba(0,212,255,0.5); }
+        .step-circle.completed { background: #00ff88; color: black; border-color: #00ff88; }
+        .step-label { position: absolute; top: 48px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+        
+        .step-panel { display: none; animation: fade-in-up 0.4s ease both; }
+        .step-panel.active { display: block; }
+        
+        .category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 24px; }
+        .category-card { background: var(--bg-card); border: 1px solid var(--border-neon); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; position: relative; overflow: hidden; }
+        .category-card:hover { transform: translateY(-4px); border-color: var(--neon-cyan); }
+        .category-card.selected { border-color: var(--neon-cyan); box-shadow: 0 0 20px rgba(0,212,255,0.3); background: rgba(0,212,255,0.1); }
+        .category-icon { font-size: 2.5rem; margin-bottom: 12px; }
+        
+        #dropZone { border: 2px dashed rgba(0,212,255,0.4); border-radius: 16px; padding: 60px; text-align: center; cursor: pointer; transition: 0.3s; }
+        #dropZone:hover { border-color: var(--neon-cyan); background: rgba(0,212,255,0.05); }
+        
+        .file-list { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; }
+        .file-card { background: var(--bg-card); border: 1px solid var(--border-neon); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .actions-row { display: flex; justify-content: space-between; margin-top: 40px; }
+        
+        /* Overlays */
+        #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; }
+        #successModal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="avatar" id="userInitials">US</div>
+            <div>
+                <div style="font-weight: bold;" id="userNameDisplay">User</div>
+                <div style="color: #00ff88; font-size: 0.8rem;">● Online</div>
+            </div>
+        </div>
+        <ul>
+            <li class="nav-item"><a href="dashboard.html" class="nav-link">🏠 Dashboard</a></li>
+            <li class="nav-item"><a href="file-complaint.html" class="nav-link active">📝 File Complaint</a></li>
+            <li class="nav-item"><a href="my-complaints.html" class="nav-link">📋 My Complaints</a></li>
+            <li class="nav-item"><a href="javascript:void(0)" onclick="comingSoon('Analytics')" class="nav-link">📊 Analytics</a></li>
+            <li class="nav-item"><a href="chat.html" class="nav-link">💬 Chat Support</a></li>
+            <li class="nav-item"><a href="javascript:void(0)" onclick="comingSoon('Forum')" class="nav-link">🏛️ Forum</a></li>
+            <li class="nav-item"><a href="profile.html" class="nav-link">👤 Profile</a></li>
+            <li class="nav-item"><a href="javascript:void(0)" onclick="comingSoon('Notifications')" class="nav-link">🔔 Notifications</a></li>
+            <li class="nav-item"><a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-link">🚪 Logout</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="muted">Home > File Complaint</div>
+        </header>
+
+        <div class="wizard-container">
+            <div class="step-indicator">
+                <div class="step-circle active" id="sc1">1<div class="step-label">Category</div></div>
+                <div class="step-circle" id="sc2">2<div class="step-label">Details</div></div>
+                <div class="step-circle" id="sc3">3<div class="step-label">Evidence</div></div>
+                <div class="step-circle" id="sc4">4<div class="step-label">Submit</div></div>
+            </div>
+
+            <form id="complaintForm">
+                <!-- STEP 1 -->
+                <div id="step-1" class="step-panel active">
+                    <div class="card" style="margin-bottom: 24px; border: 1px solid var(--neon-cyan); background: rgba(0,212,255,0.05);">
+                        <h3 style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">🤖 Analyse with AI (Smart Complaint Generator)</h3>
+                        <p class="muted" style="margin-bottom: 16px; font-size: 0.9rem;">Quickly generate a comprehensive complaint. Just provide a title and date.</p>
+                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px;">
+                            <input type="text" id="aiCrimeTitle" placeholder="Crime Title (e.g., UPI Fraud on GPay)">
+                            <input type="date" id="aiIncidentDate">
+                        </div>
+                        <button type="button" class="btn-primary" id="aiAnalyseBtn" style="width: 100%;">⚡ ANALYSE WITH AI</button>
+                        
+                        <!-- AI Result Display -->
+                        <div id="aiAnalysisResult" style="display: none; margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(0,212,255,0.2);">
+                                <div class="badge" style="background: rgba(255,0,110,0.2); color: #ff006e; padding: 4px 12px; border-radius: 4px; font-weight: bold;" id="aiSeverity">Severity: High</div>
+                                <div class="badge" style="background: rgba(0,212,255,0.2); color: var(--neon-cyan); padding: 4px 12px; border-radius: 4px;" id="aiConfidence">Confidence: 94%</div>
+                                <div class="badge" style="background: rgba(255,170,0,0.2); color: #ffaa00; padding: 4px 12px; border-radius: 4px;" id="aiFraudScore">Fraud Risk: 15%</div>
+                            </div>
+                            
+                            <p><strong class="cyan">Generated Description:</strong></p>
+                            <p id="aiGenDesc" style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem; line-height: 1.5;"></p>
+                            
+                            <p><strong class="cyan">Applicable Legal Sections:</strong></p>
+                            <ul id="aiGenSections" style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem; padding-left: 20px;"></ul>
+                            
+                            <p><strong class="cyan">Suggested Evidence:</strong></p>
+                            <ul id="aiGenEvidence" style="color: var(--text-secondary); margin-bottom: 24px; font-size: 0.9rem; padding-left: 20px;"></ul>
+                            
+                            <div style="display: flex; gap: 12px;">
+                                <button type="button" class="btn-primary" id="aiFileDirectBtn" style="flex: 1;">🚀 File Complaint Directly</button>
+                                <button type="button" class="btn-outline" id="aiEditBtn" style="flex: 1;">📝 Edit Before Filing</button>
+                                <button type="button" class="btn-outline" id="aiRegenerateBtn" style="flex: 1;">↻ Regenerate</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="text-align: center; margin: 32px 0; color: var(--text-muted);">--- OR FILE MANUALLY ---</h3>
+                    
+                    <h3>Select Category</h3>
+                    <div class="category-grid" id="catGrid">
+                        <!-- Populated by JS -->
+                    </div>
+                    
+                    <div class="actions-row">
+                        <div></div>
+                        <button type="button" class="btn-primary" id="btnNext1" disabled>NEXT STEP →</button>
+                    </div>
+                </div>
+
+                <!-- STEP 2 -->
+                <div id="step-2" class="step-panel">
+                    <div class="card">
+                        <div class="form-group">
+                            <label>Complaint Title</label>
+                            <input type="text" id="title" required maxlength="150">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="description" rows="5" required minlength="100"></textarea>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; display: flex; justify-content: space-between;">
+                                <span>Be specific and detailed.</span>
+                                <button type="button" id="voiceBtn" style="background:none; border:none; color:var(--neon-cyan); cursor:pointer;">🎤 Record Voice</button>
+                            </div>
+                        </div>
+                        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group">
+                                <label>Date & Time of Incident</label>
+                                <input type="datetime-local" id="incidentDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Platform</label>
+                                <select id="platform" required>
+                                    <option value="">Select Platform</option>
+                                    <option value="UPI App">UPI App</option>
+                                    <option value="Social Media">Social Media</option>
+                                    <option value="Email">Email</option>
+                                    <option value="Website">Website</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Estimated Financial Loss (₹)</label>
+                            <input type="number" id="financialLoss" min="0">
+                        </div>
+                    </div>
+                    <div class="actions-row">
+                        <button type="button" class="btn-outline" onclick="goToStep(1)">← BACK</button>
+                        <button type="button" class="btn-primary" onclick="goToStep(3)">NEXT STEP →</button>
+                    </div>
+                </div>
+
+                <!-- STEP 3 -->
+                <div id="step-3" class="step-panel">
+                    <div class="card">
+                        <h3 style="margin-bottom: 16px;">Upload Evidence</h3>
+                        <div id="dropZone">
+                            <div style="font-size: 3rem; margin-bottom: 16px;">☁️</div>
+                            <div>Drag files here or click to browse</div>
+                            <div class="muted" style="font-size: 0.8rem; margin-top: 8px;">Images, Videos, PDFs accepted (Max 10MB)</div>
+                            <input type="file" id="fileInput" multiple accept="image/*,video/*,.pdf" style="display: none;">
+                        </div>
+                        <div class="file-list" id="fileList"></div>
+                    </div>
+                    <div class="actions-row">
+                        <button type="button" class="btn-outline" onclick="goToStep(2)">← BACK</button>
+                        <button type="button" class="btn-primary" onclick="goToStep(4)">REVIEW & SUBMIT →</button>
+                    </div>
+                </div>
+
+                <!-- STEP 4 -->
+                <div id="step-4" class="step-panel">
+                    <div class="card" style="margin-bottom: 16px;">
+                        <h3 class="cyan">Review Details</h3>
+                        <div id="summaryContent" style="margin-top: 16px; color: var(--text-secondary);"></div>
+                    </div>
+                    <div class="card">
+                        <h3>Priority</h3>
+                        <div style="margin-top: 12px; display: flex; gap: 16px;">
+                            <label><input type="radio" name="priority" value="Standard" checked> Standard</label>
+                            <label><input type="radio" name="priority" value="High"> High Priority (Requires justification)</label>
+                        </div>
+                    </div>
+                    <div class="actions-row">
+                        <button type="button" class="btn-outline" onclick="goToStep(3)">← BACK</button>
+                        <button type="button" class="btn-primary" id="submitFinalBtn" style="font-size: 1.2rem; padding: 16px 40px; box-shadow: 0 0 30px rgba(0,212,255,0.5);">🚀 SUBMIT COMPLAINT</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay">
+    <div class="animate-spin-slow" style="font-size: 4rem; margin-bottom: 20px;">🛡️</div>
+    <h2 class="cyan animate-pulse-neon">Filing Complaint...</h2>
+    <p class="muted">Encrypting evidence and securing data.</p>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal">
+    <div class="card" style="text-align: center; max-width: 500px; width: 100%;">
+        <div style="font-size: 5rem; color: #00ff88; margin-bottom: 20px;" class="animate-pulse-neon">✓</div>
+        <h2 style="color: #00ff88; margin-bottom: 16px;">Complaint Filed Successfully!</h2>
+        <div id="successId" class="mono" style="font-size: 1.5rem; color: var(--neon-cyan); margin-bottom: 24px; padding: 12px; background: rgba(0,212,255,0.1); border-radius: 8px;"></div>
+        <p class="muted" style="margin-bottom: 32px;">Expected response time: 3-5 business days</p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <button type="button" class="btn-outline" onclick="window.location.href='dashboard.html'">🏠 DASHBOARD</button>
+            <button type="button" class="btn-primary" onclick="viewComplaint()">📋 VIEW STATUS</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+    if (!guardPage('user')) { /* stops execution */ }
+
+    // Wizard Logic
+    let currentStep = 1;
+    let selectedCategory = null;
+    let uploadedFiles = [];
+    let submittedId = null;
+
+    const cats = [
+        {n:'Financial Fraud', i:'💳'}, {n:'Identity Theft', i:'👤'}, {n:'Phishing / Smishing', i:'🎣'},
+        {n:'Ransomware', i:'🔒'}, {n:'Online Scams', i:'🎭'}, {n:'Social Media Abuse', i:'💬'},
+        {n:'Cyberstalking', i:'👁️'}, {n:'Hacking / Unauthorised Access', i:'☠️'}, {n:'Data Breach', i:'📂'},
+        {n:'Cryptocurrency Fraud', i:'🪙'}, {n:'CSAM / Child Safety', i:'🛡️'}, {n:'Cyber Defamation', i:'📢'},
+        {n:'Job / Investment Fraud', i:'💼'}, {n:'Sextortion', i:'📸'}, {n:'DDoS Attack', i:'💥'},
+        {n:'E-Commerce Fraud', i:'🛒'}, {n:'Dark Web Activity', i:'🕶️'}, {n:'IP Theft / Piracy', i:'©️'},
+        {n:'Malware / Spyware', i:'🦠'}, {n:'Illegal Gambling / Content', i:'🎲'}
+    ];
+    
+    const catGrid = document.getElementById('catGrid');
+    cats.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'category-card';
+        div.innerHTML = `<div class="category-icon">${c.i}</div><div>${c.n}</div>`;
+        div.onclick = () => {
+            document.querySelectorAll('.category-card').forEach(el => el.classList.remove('selected'));
+            div.classList.add('selected');
+            selectedCategory = c.n;
+            document.getElementById('btnNext1').disabled = false;
+        };
+        catGrid.appendChild(div);
+    });
+
+    function goToStep(n) {
+        if (n === 2 && !selectedCategory) return;
+        if (n === 3) {
+            if (!document.getElementById('title').checkValidity() || !document.getElementById('description').checkValidity()) {
+                showToast('Please fill required fields (Description > 100 chars)', 'warning');
+                return;
+            }
+        }
+        if (n === 4) updateSummary();
+
+        document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(`step-${n}`).classList.add('active');
+        
+        for(let i=1; i<=4; i++) {
+            const circle = document.getElementById(`sc${i}`);
+            circle.className = 'step-circle';
+            if (i < n) {
+                circle.classList.add('completed');
+                circle.innerHTML = '✓<div class="step-label">' + circle.querySelector('.step-label').innerText + '</div>';
+            } else if (i === n) {
+                circle.classList.add('active');
+                circle.innerHTML = i + '<div class="step-label">' + circle.querySelector('.step-label').innerText + '</div>';
+            } else {
+                circle.innerHTML = i + '<div class="step-label">' + circle.querySelector('.step-label').innerText + '</div>';
+            }
+        }
+        currentStep = n;
+    }
+
+    document.getElementById('btnNext1').onclick = () => goToStep(2);
+
+    // Analyse with AI
+    let currentAIData = null;
+    
+    document.getElementById('aiAnalyseBtn').onclick = async () => {
+        const title = document.getElementById('aiCrimeTitle').value;
+        const date = document.getElementById('aiIncidentDate').value;
+        
+        if (!title || !date) {
+            showToast('Please provide both Title and Date', 'warning');
+            return;
+        }
+        
+        const btn = document.getElementById('aiAnalyseBtn');
+        btn.innerHTML = '↻ Analyzing with AI...';
+        btn.disabled = true;
+        
+        try {
+            const res = await apiCall('/ai/generate-complaint', {
+                method: 'POST',
+                body: JSON.stringify({title, incidentDate: date})
+            });
+            
+            currentAIData = {
+                title: title,
+                incidentDate: date,
+                ...res
+            };
+            
+            document.getElementById('aiSeverity').innerText = `Severity: ${res.severity}`;
+            document.getElementById('aiConfidence').innerText = `Confidence: ${res.aiConfidenceScore}%`;
+            document.getElementById('aiGenDesc').innerText = res.description;
+            
+            // New: Sentiment & Fake Detection
+            const sentimentRes = await apiCall('/ai/analyse-sentiment', { method: 'POST', body: JSON.stringify({ text: res.description }) });
+            const fraudRes = await apiCall('/ai/detect-fake', { method: 'POST', body: JSON.stringify({ text: res.description }) });
+            
+            document.getElementById('aiSeverity').innerText = `Priority: ${sentimentRes.urgency}`;
+            document.getElementById('aiFraudScore').innerText = `Fraud Risk: ${fraudRes.fakeScore}%`;
+            if (fraudRes.isLikelyFake) {
+                document.getElementById('aiFraudScore').style.background = 'rgba(239,68,68,0.3)';
+                document.getElementById('aiFraudScore').style.color = '#ef4444';
+            }
+            
+            const secList = document.getElementById('aiGenSections');
+            secList.innerHTML = '';
+            res.applicableSections.forEach(s => {
+                const li = document.createElement('li');
+                li.innerText = s;
+                secList.appendChild(li);
+            });
+            
+            const evList = document.getElementById('aiGenEvidence');
+            evList.innerHTML = '';
+            res.suggestedEvidence.forEach(s => {
+                const li = document.createElement('li');
+                li.innerText = s;
+                evList.appendChild(li);
+            });
+            
+            document.getElementById('aiAnalysisResult').style.display = 'block';
+            
+            // Auto-select category
+            selectedCategory = res.category;
+            const cards = document.querySelectorAll('.category-card');
+            cards.forEach(c => {
+                if (c.innerText.includes(res.category)) c.classList.add('selected');
+                else c.classList.remove('selected');
+            });
+            document.getElementById('btnNext1').disabled = false;
+            
+        } catch(e) {
+            showToast('AI analysis failed', 'error');
+        } finally {
+            btn.innerHTML = '⚡ ANALYSE WITH AI';
+            btn.disabled = false;
+        }
+    };
+    
+    document.getElementById('aiRegenerateBtn').onclick = () => {
+        document.getElementById('aiAnalyseBtn').click();
+    };
+    
+    document.getElementById('aiEditBtn').onclick = () => {
+        if (!currentAIData) return;
+        document.getElementById('title').value = currentAIData.title;
+        document.getElementById('incidentDate').value = currentAIData.incidentDate + 'T12:00'; // Default time
+        document.getElementById('description').value = currentAIData.description;
+        goToStep(2);
+    };
+    
+    document.getElementById('aiFileDirectBtn').onclick = () => {
+        if (!currentAIData) return;
+        document.getElementById('title').value = currentAIData.title;
+        document.getElementById('incidentDate').value = currentAIData.incidentDate + 'T12:00';
+        document.getElementById('description').value = currentAIData.description;
+        document.getElementById('platform').value = 'Other'; // Fallback
+        
+        // Go straight to step 4 for submission
+        goToStep(4);
+    };
+
+    // File Upload
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    
+    dropZone.onclick = () => fileInput.click();
+    dropZone.ondragover = e => { e.preventDefault(); dropZone.style.borderColor = '#00d4ff'; };
+    dropZone.ondragleave = e => { e.preventDefault(); dropZone.style.borderColor = 'rgba(0,212,255,0.4)'; };
+    dropZone.ondrop = e => { e.preventDefault(); dropZone.style.borderColor = 'rgba(0,212,255,0.4)'; handleFiles(e.dataTransfer.files); };
+    fileInput.onchange = e => handleFiles(e.target.files);
+
+    function handleFiles(files) {
+        for (let file of files) {
+            if (file.size > 10 * 1024 * 1024) { showToast(`${file.name} is too large`, 'error'); continue; }
+            uploadedFiles.push(file);
+            renderFiles();
+        }
+    }
+
+    function renderFiles() {
+        const list = document.getElementById('fileList');
+        list.innerHTML = '';
+        uploadedFiles.forEach((file, index) => {
+            const div = document.createElement('div');
+            div.className = 'file-card';
+            div.innerHTML = `
+                <div>📄 ${file.name} <span class="muted" style="margin-left: 12px;">${(file.size/1024/1024).toFixed(2)} MB</span></div>
+                <button type="button" class="btn-outline" style="padding: 4px 12px; border-color: #ff006e; color: #ff006e;" onclick="removeFile(${index})">Remove</button>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    window.removeFile = (idx) => { uploadedFiles.splice(idx, 1); renderFiles(); };
+
+    // Summary
+    function updateSummary() {
+        document.getElementById('summaryContent').innerHTML = `
+            <p><strong class="white">Category:</strong> ${selectedCategory}</p>
+            <p><strong class="white">Title:</strong> ${escapeHtml(document.getElementById('title').value)}</p>
+            <p><strong class="white">Platform:</strong> ${escapeHtml(document.getElementById('platform').value)}</p>
+            <p><strong class="white">Loss:</strong> ₹${document.getElementById('financialLoss').value || 0}</p>
+            <p><strong class="white">Evidence Files:</strong> ${uploadedFiles.length}</p>
+        `;
+    }
+
+    // Submit
+    document.getElementById('submitFinalBtn').onclick = async () => {
+        const formData = new FormData();
+        formData.append('category', selectedCategory);
+        formData.append('title', document.getElementById('title').value);
+        formData.append('description', document.getElementById('description').value);
+        formData.append('incidentDate', document.getElementById('incidentDate').value);
+        formData.append('platform', document.getElementById('platform').value);
+        formData.append('financialLoss', document.getElementById('financialLoss').value);
+        formData.append('priority', document.querySelector('input[name="priority"]:checked').value);
+        
+        // Append AI Metadata if it was used
+        if (currentAIData) {
+            formData.append('isAIAssisted', 'true');
+            formData.append('aiConfidenceScore', currentAIData.aiConfidenceScore);
+            formData.append('legalSections', JSON.stringify(currentAIData.applicableSections));
+            formData.append('suggestedEvidence', JSON.stringify(currentAIData.suggestedEvidence));
+        }
+        
+        uploadedFiles.forEach(f => formData.append('file', f));
+
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        
+        try {
+            const res = await apiCall('/complaints', {
+                method: 'POST',
+                body: formData
+            });
+            document.getElementById('loadingOverlay').style.display = 'none';
+            if (res && res.complaintId) {
+                submittedId = res._id;
+                document.getElementById('successId').innerText = res.complaintId;
+                document.getElementById('successModal').style.display = 'flex';
+            } else {
+                showToast('Submission failed', 'error');
+            }
+        } catch(e) {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            showToast('Network error', 'error');
+        }
+    };
+
+    function viewComplaint() {
+        window.location.href = `complaint-detail.html?id=${submittedId}`;
+    }
+</script>
+</body>
+</html>

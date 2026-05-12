@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .login-layout { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+        .hero-side { position: relative; overflow: hidden; background: var(--bg-secondary); }
+        .form-side { display: flex; align-items: center; justify-content: center; background: rgba(0,0,50,0.3); backdrop-filter: blur(10px); flex-direction: column; padding: 20px;}
+        .login-card { max-width: 520px; width: 100%; overflow: hidden; position: relative; }
+        .login-card h2 { color: var(--neon-cyan); text-align: center; font-size: 2rem; margin-bottom: 24px; animation: glow-text 2s infinite; }
+        
+        .step-indicator { display: flex; justify-content: space-between; position: relative; margin-bottom: 32px; padding: 0 20px; }
+        .step-indicator::before { content: ''; position: absolute; top: 14px; left: 30px; right: 30px; height: 2px; background: var(--border-neon); z-index: 1; }
+        .step-dot { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-card); border: 2px solid var(--border-neon); display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; font-family: 'Orbitron'; font-size: 0.9rem; transition: 0.3s; }
+        .step-dot.active { border-color: var(--neon-cyan); box-shadow: 0 0 15px rgba(0,212,255,0.5); }
+        .step-dot.completed { background: var(--neon-cyan); color: var(--bg-primary); border-color: var(--neon-cyan); }
+        .step-label { position: absolute; top: 38px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+        .step-dot.active .step-label { color: var(--neon-cyan); }
+        
+        .step-panel { display: none; animation: slide-in-right 0.3s ease both; }
+        .step-panel.active { display: block; }
+        .step-panel.slide-left { animation: slide-out-left 0.3s ease both; }
+        
+        @keyframes slide-out-left { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-30px); opacity: 0; } }
+        
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-actions { display: flex; justify-content: space-between; margin-top: 32px; gap: 16px; }
+        .btn-full { width: 100%; }
+        
+        .strength-meter { display: flex; gap: 4px; margin-top: 8px; }
+        .strength-bar { height: 4px; flex: 1; background: var(--bg-card); border-radius: 2px; transition: 0.3s; }
+        .strength-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; text-align: right; }
+        
+        .otp-container { display: flex; justify-content: space-between; gap: 8px; margin: 24px 0; }
+        .otp-input { width: 48px; height: 56px; text-align: center; font-size: 1.5rem; font-family: 'JetBrains Mono'; border-radius: 12px; }
+        
+        @media (max-width: 768px) {
+            .login-layout { grid-template-columns: 1fr; }
+            .hero-side { display: none; }
+            .form-row { grid-template-columns: 1fr; }
+            .otp-input { width: 40px; height: 48px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-layout">
+    <div class="hero-side" style="background: url('https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') center/cover;">
+        <div style="position:absolute; inset:0; background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(10,10,26,0.95)); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px;">
+            <h1 class="animate-slide-in-left" style="color:var(--neon-cyan); font-family:'Orbitron'; font-size:3rem; margin-bottom:16px;">JOIN NOW</h1>
+            <p style="color:var(--text-secondary); max-width:400px; font-size:1.1rem; line-height:1.6;">Register to file complaints, track investigations, and access AI-powered legal assistance.</p>
+        </div>
+    </div>
+    
+    <div class="form-side">
+        <div class="card login-card">
+            <h2>CREATE ACCOUNT</h2>
+            
+            <div class="step-indicator">
+                <div class="step-dot active" id="dot1">1<span class="step-label">Personal Info</span></div>
+                <div class="step-dot" id="dot2">2<span class="step-label">Security</span></div>
+            </div>
+            <form id="registerForm">
+                <!-- STEP 1 -->
+                <div class="step-panel active" id="step1">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="fullName" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" id="phone" pattern="[0-9]{10}" title="10 digit mobile number" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>State</label>
+                            <select id="state" required onchange="updateDistricts()">
+                                <option value="">Select State...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>District</label>
+                            <select id="district" required disabled>
+                                <option value="">Select District...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions" style="justify-content: flex-end;">
+                        <button type="button" class="btn-primary" onclick="nextStep(1)">NEXT STEP →</button>
+                    </div>
+                    <div style="text-align:center; margin-top:16px; font-size:0.9rem;">
+                        Already have an account? <a href="login.html">Login here</a>
+                    </div>
+                </div>
+
+                <!-- STEP 2 -->
+                <div class="step-panel" id="step2">
+                    <div class="form-group">
+                        <label>Username (4-20 chars)</label>
+                        <input type="text" id="username" minlength="4" maxlength="20" required>
+                        <div class="error-text" id="usernameError"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="password" required>
+                            <div class="strength-meter" id="strengthMeter">
+                                <div class="strength-bar"></div><div class="strength-bar"></div>
+                                <div class="strength-bar"></div><div class="strength-bar"></div>
+                                <div class="strength-bar"></div>
+                            </div>
+                            <div class="strength-label" id="strengthLabel">Very Weak</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <input type="password" id="confirmPassword" required>
+                            <div class="error-text" id="passwordMatchError">Passwords do not match</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Security Question</label>
+                        <select id="securityQuestion" required>
+                            <option value="">Select a question...</option>
+                            <option value="pet">Name of your first pet?</option>
+                            <option value="mother">Mother's maiden name?</option>
+                            <option value="city">In which city were you born?</option>
+                            <option value="food">What is your favorite food?</option>
+                            <option value="nickname">What was your childhood nickname?</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Security Answer</label>
+                        <input type="text" id="securityAnswer" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-outline" onclick="prevStep(2)">← BACK</button>
+                        <button type="button" class="btn-primary" onclick="nextStep(2)" id="submitRegBtn">CREATE ACCOUNT</button>
+                    </div>
+                </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/locations.js"></script>
+<script>
+    let currentStep = 1;
+    let formData = {};
+    
+    // Initialize Locations
+    const stateSelect = document.getElementById('state');
+    const districtSelect = document.getElementById('district');
+    
+    Object.keys(indianLocations).sort().forEach(state => {
+        const opt = document.createElement('option');
+        opt.value = state;
+        opt.innerText = state;
+        stateSelect.appendChild(opt);
+    });
+
+    window.updateDistricts = () => {
+        const state = stateSelect.value;
+        districtSelect.innerHTML = '<option value="">Select District...</option>';
+        if (state) {
+            districtSelect.disabled = false;
+            indianLocations[state].sort().forEach(dist => {
+                const opt = document.createElement('option');
+                opt.value = dist;
+                opt.innerText = dist;
+                districtSelect.appendChild(opt);
+            });
+        } else {
+            districtSelect.disabled = true;
+        }
+    };
+    
+    function updateIndicator() {
+        for(let i=1; i<=2; i++) {
+            const dot = document.getElementById('dot'+i);
+            dot.className = 'step-dot';
+            if (i < currentStep) dot.classList.add('completed');
+            if (i === currentStep) dot.classList.add('active');
+            if (i < currentStep) dot.innerHTML = '✓<span class="step-label">' + dot.querySelector('.step-label').innerText + '</span>';
+            else dot.innerHTML = i + '<span class="step-label">' + dot.querySelector('.step-label').innerText + '</span>';
+        }
+    }
+
+    function showStep(step) {
+        document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active', 'slide-left'));
+        const panel = document.getElementById('step'+step);
+        panel.classList.add('active');
+        currentStep = step;
+        updateIndicator();
+    }
+
+    function prevStep(step) {
+        showStep(step - 1);
+    }
+
+    async function nextStep(step) {
+        // Validation logic
+        if (step === 1) {
+            const fName = document.getElementById('fullName');
+            const email = document.getElementById('email');
+            const phone = document.getElementById('phone');
+            const state = document.getElementById('state');
+            const dist = document.getElementById('district');
+            
+            if (!fName.checkValidity() || !email.checkValidity() || !phone.checkValidity() || !state.value || !dist.value) {
+                showToast('Please fill all required fields correctly', 'warning');
+                return;
+            }
+            formData.fullName = fName.value;
+            formData.email = email.value;
+            formData.phone = phone.value;
+            formData.state = state.value;
+            formData.district = dist.value;
+            
+            showStep(2);
+        } else if (step === 2) {
+            const user = document.getElementById('username');
+            const pass = document.getElementById('password');
+            const conf = document.getElementById('confirmPassword');
+            const sq = document.getElementById('securityQuestion');
+            const sa = document.getElementById('securityAnswer');
+            
+            if (!user.checkValidity()) {
+                showToast('Username must be between 4-20 characters', 'warning');
+                return;
+            }
+            if (!pass.checkValidity()) {
+                showToast('Password is required', 'warning');
+                return;
+            }
+            if (pass.value !== conf.value) {
+                showToast('Passwords do not match', 'warning');
+                conf.parentElement.classList.add('error');
+                document.getElementById('passwordMatchError').style.display = 'block';
+                return;
+            }
+            if (!sq.value || !sa.value) {
+                showToast('Please select a security question and provide an answer', 'warning');
+                return;
+            }
+            
+            // Check username API
+            try {
+                const res = await fetch(`/api/v1/auth/check-username?username=${user.value}`);
+                const data = await res.json();
+                if (!data.available) {
+                    showToast('Username already taken', 'error');
+                    return;
+                }
+            } catch(e) {
+                console.error(e);
+            }
+            
+            formData.username = user.value;
+            formData.password = pass.value;
+            formData.securityQuestion = sq.value;
+            formData.securityAnswer = sa.value;
+            
+            // Submit Registration
+            const btn = document.getElementById('submitRegBtn');
+            const orig = btn.innerText;
+            btn.innerHTML = '<span class="animate-spin-slow">↻</span>';
+            btn.disabled = true;
+            
+            try {
+                const res = await fetch('/api/v1/auth/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(formData)
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    window.location.href = 'login.html?registered=true';
+                } else {
+                    showToast(data.error || 'Registration failed', 'error');
+                }
+            } catch(e) {
+                showToast('Network error', 'error');
+            } finally {
+                btn.innerHTML = orig;
+                btn.disabled = false;
+            }
+        }
+    }
+
+    // Password Strength Meter
+    const passInput = document.getElementById('password');
+    const bars = document.querySelectorAll('.strength-bar');
+    const label = document.getElementById('strengthLabel');
+    passInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        let strength = 0;
+        if (val.length >= 8) strength++;
+        if (/[A-Z]/.test(val)) strength++;
+        if (/[a-z]/.test(val)) strength++;
+        if (/[0-9]/.test(val)) strength++;
+        if (/[^A-Za-z0-9]/.test(val)) strength++;
+        
+        const colors = ['#333', '#ff006e', '#ffaa00', '#ffea00', '#00ff88', '#00d4ff'];
+        const labels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong', 'Excellent'];
+        
+        bars.forEach((bar, i) => {
+            bar.style.background = i < strength ? colors[strength] : 'var(--bg-card)';
+        });
+        label.innerText = labels[strength] || 'Very Weak';
+        label.style.color = colors[strength] || 'var(--text-muted)';
+    });
+
+    // Confirm password logic
+    const confInput = document.getElementById('confirmPassword');
+    confInput.addEventListener('input', () => {
+        if (confInput.value === passInput.value) {
+            confInput.parentElement.classList.remove('error');
+            document.getElementById('passwordMatchError').style.display = 'none';
+        } else {
+            confInput.parentElement.classList.add('error');
+            document.getElementById('passwordMatchError').style.display = 'block';
+        }
+    });
+
+    // OTP code removed
+</script>
+</body>
+</html>

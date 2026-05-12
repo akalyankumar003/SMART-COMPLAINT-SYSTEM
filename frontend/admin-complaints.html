@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="admin">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complaints Management - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; background: var(--bg-primary); }
+        .layout { display: flex; min-height: 100vh; }
+        
+        .sidebar { width: 260px; background: var(--sidebar-bg); position: fixed; height: 100vh; z-index: 100; transition: 0.3s; padding: 0; border-right: 1px solid var(--border-subtle); }
+        .sidebar-header { padding: 24px; display: flex; align-items: center; gap: 12px; }
+        .avatar-container { position: relative; }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-weight: bold; border: 2px solid var(--neon-primary); color: white; }
+        .online-dot { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: var(--success); border-radius: 50%; border: 2px solid var(--sidebar-bg); }
+        
+        .role-badge { background: linear-gradient(135deg, rgba(217,70,239,0.2), rgba(139,92,246,0.2)); color: var(--neon-primary); padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; margin-top: 4px; display: inline-block; box-shadow: var(--glow-magenta); border: 1px solid rgba(217,70,239,0.3); }
+        
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; margin: 4px 12px; border-radius: 8px; color: var(--text-secondary); text-decoration: none; transition: all 0.2s ease; position: relative; font-size: 14px; }
+        .nav-item:hover { background: rgba(217,70,239,0.08); color: var(--text-primary); }
+        .nav-item.active { background: rgba(217,70,239,0.15); color: var(--neon-primary); box-shadow: inset 3px 0 0 var(--neon-primary); }
+        .nav-item.active .nav-icon { filter: drop-shadow(0 0 8px var(--neon-primary)); }
+        .nav-icon { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .nav-divider { height: 1px; background: var(--border-subtle); margin: 16px 20px; }
+        
+        .main-content { margin-left: 260px; flex: 1; padding: 0 0 24px 0; background: var(--bg-primary); }
+        
+        .topbar { height: 64px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 99; }
+        .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 14px; font-family: 'Orbitron', sans-serif; }
+        .breadcrumb-item { color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .breadcrumb-item.active { color: var(--neon-primary); font-weight: 500; }
+        
+        .sys-time { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+        
+        .content-container { padding: 24px; }
+        
+        .filter-bar { display: flex; gap: 12px; margin-bottom: 24px; background: var(--bg-card); padding: 12px; border-radius: 12px; border: 1px solid var(--border-subtle); }
+        .filter-pill { background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); color: var(--text-secondary); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .filter-pill:hover { border-color: var(--neon-primary); color: white; }
+        .filter-pill.active { background: rgba(217,70,239,0.2); color: var(--neon-primary); border-color: var(--neon-primary); box-shadow: var(--glow-magenta); }
+        
+        .table-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { text-align: left; padding: 16px; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border-subtle); }
+        .data-table td { padding: 16px; font-size: 14px; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); }
+        .data-table tr:hover { background: rgba(217,70,239,0.03); }
+        
+        .complaint-id-link { font-family: 'JetBrains Mono', monospace; color: var(--neon-primary); font-weight: 600; text-decoration: none; }
+        .status-badge { padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid transparent; }
+        .status-badge.pending { background: rgba(255,170,0,0.1); color: var(--warning); border-color: rgba(255,170,0,0.2); }
+        .status-badge.under-review { background: rgba(123,47,255,0.1); color: var(--neon-secondary); border-color: rgba(123,47,255,0.2); }
+        .status-badge.resolved { background: rgba(0,255,136,0.1); color: var(--success); border-color: rgba(0,255,136,0.2); }
+        
+        .priority-high { color: var(--danger); font-weight: 700; }
+        
+        /* Modal Styles */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+        .modal-content { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; width: 100%; max-width: 700px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 16px; }
+        .modal-title { font-family: 'Orbitron'; font-size: 1.2rem; color: white; margin: 0; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 13px; font-weight: 500; }
+        .form-group select, .form-group textarea { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 12px; color: white; font-family: inherit; }
+        .form-group select:focus, .form-group textarea:focus { border-color: var(--neon-primary); outline: none; box-shadow: 0 0 0 2px rgba(217,70,239,0.2); }
+        
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; }
+        .btn-download { background: rgba(0,212,255,0.15); color: var(--chart-cyan); border: 1px solid rgba(0,212,255,0.3); padding: 10px 20px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; transition: 0.2s; }
+        .btn-download:hover { background: rgba(0,212,255,0.25); border-color: var(--chart-cyan); }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="avatar-container">
+                <div class="avatar">AD</div>
+                <div class="online-dot"></div>
+            </div>
+            <div>
+                <div style="font-weight: bold; color: white;">Administrator</div>
+                <div class="role-badge">SUPER ADMIN</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="admin-dashboard.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                <span>Control Center</span>
+            </a>
+            <a href="admin-complaints.html" class="nav-item active">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                <span>All Complaints</span>
+            </a>
+            <a href="admin-users.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <span>User Management</span>
+            </a>
+            <a href="admin-heatmap.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                <span>Crime Heatmap</span>
+            </a>
+            <div class="nav-divider"></div>
+            <a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>System Exit</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="breadcrumb">
+                <span class="breadcrumb-item">Admin</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item active">All Complaints</span>
+            </div>
+            <div class="sys-time" id="sysTime"></div>
+        </header>
+
+        <div class="content-container">
+            <div class="filter-bar" style="justify-content: space-between;">
+                <div style="display:flex; gap:12px;">
+                    <button class="filter-pill active" onclick="loadComplaints('')">All</button>
+                    <button class="filter-pill" onclick="loadComplaints('Pending')">Pending</button>
+                    <button class="filter-pill" onclick="loadComplaints('Under Review')">In Review</button>
+                    <button class="filter-pill" onclick="loadComplaints('In Progress')">In Progress</button>
+                    <button class="filter-pill" onclick="loadComplaints('Resolved')">Resolved</button>
+                </div>
+                <div style="display:flex; gap:12px;">
+                    <button id="btnKeywordWatchlist" class="btn-download" style="background:var(--sidebar-bg); border-color:var(--border-subtle); color:white; font-size:12px; padding:6px 12px;">👁️ Watchlist</button>
+                    <button id="bulkAIScanBtn" class="btn-download" style="background:rgba(123,47,255,0.1); border-color:var(--neon-purple); color:var(--neon-purple); font-size:12px; padding:6px 12px;">⚡ AI Scan</button>
+                    <button id="btnExportCSV" class="btn-download" style="font-size:12px; padding:6px 12px;">⬇️ Export</button>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Complaint ID</th>
+                            <th>User</th>
+                            <th>Priority</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Filed Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="complaintsTable">
+                        <tr><td colspan="7" style="text-align:center; padding: 40px;">Searching data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal" id="statusModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">UPDATE COMPLAINT STATUS</h3>
+            <button onclick="closeModal()" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+        
+        <input type="hidden" id="modalId">
+        
+        <div id="aiInsightsPanel" style="display: none; background: rgba(0,212,255,0.05); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+            <h4 style="color: var(--chart-cyan); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">🤖 AI ANALYSIS</h4>
+            <div style="font-size: 0.9rem; margin-bottom: 12px;">Fraud Score: <span id="modalAiConfidence" style="font-weight: bold; color: var(--danger);"></span></div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);"><strong style="color: white;">Category Match:</strong> <span id="modalAiSections"></span></div>
+        </div>
+        
+        <div style="display:flex; gap:16px;">
+            <div class="form-group" style="flex:1;">
+                <label>Current Status</label>
+                <select id="newStatus">
+                    <option value="Pending">Pending</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label>Assign Agent</label>
+                <select id="agentSelect">
+                    <option value="">-- Unassigned --</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Case Notes (Internal & Notification)</label>
+            <textarea id="statusNote" rows="3" placeholder="Enter investigation updates or resolution notes..."></textarea>
+        </div>
+        
+        <div class="modal-actions" style="flex-wrap: wrap; justify-content: center; gap:8px;">
+            <button class="btn-primary" style="background: var(--success); border:none;" onclick="saveStatus('Accepted')">✅ ACCEPT</button>
+            <button class="btn-primary" style="background: var(--danger); border:none;" onclick="saveStatus('Rejected')">❌ REJECT</button>
+            <button class="btn-primary" style="background: var(--neon-purple); border:none;" onclick="saveStatus('Resolved')">🏆 RESOLVE</button>
+            <button class="btn-primary" style="background: var(--danger); border:1px solid white;" onclick="escalateComplaint()">🚨 ESCALATE</button>
+            <div style="width:100%; height:1px; background:var(--border-subtle); margin:12px 0;"></div>
+            <button class="btn-download" id="btnDownloadPDF">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"></path></svg>
+                GENERATE PDF REPORT
+            </button>
+            <button class="btn-download" style="background:transparent; color:white; border-color:var(--border-subtle);" onclick="closeModal()">CANCEL</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="watchlistModal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 class="modal-title">👁️ KEYWORD WATCHLIST</h3>
+            <button onclick="document.getElementById('watchlistModal').style.display='none'" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>Comma-separated keywords (flags high fraud risk if found)</label>
+            <textarea id="watchlistText" rows="4" placeholder="e.g. urgent money, lottery, anonymous transfer..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-download" style="background:var(--success); border:none; color:white;" onclick="saveWatchlist()">Save Watchlist</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+    if (!guardPage('admin')) { }
+    
+    let allComplaints = [];
+    let currentComplaint = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadAgents();
+        loadComplaints('');
+        
+        // Setup Export CSV
+        const exportBtn = document.getElementById('btnExportCSV');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                if (allComplaints.length === 0) return;
+                let csv = "ID,User,Priority,Category,Status,Date\n";
+                allComplaints.forEach(c => {
+                    csv += `"${c.id}","${c.userName}","${c.priority}","${c.category}","${c.status}","${new Date(c.createdAt).toLocaleDateString()}"\n`;
+                });
+                const link = document.createElement('a');
+                link.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+                link.download = 'complaints_export.csv';
+                link.click();
+                if(window.showToast) showToast('Export downloaded successfully', 'success');
+            });
+        }
+        
+        // Setup Watchlist
+        const watchlistBtn = document.getElementById('btnKeywordWatchlist');
+        if(watchlistBtn) {
+            watchlistBtn.addEventListener('click', () => {
+                document.getElementById('watchlistText').value = localStorage.getItem('scs_settings_watchlist') || 'bribe, fake, urgent transfer, anonymous payment';
+                document.getElementById('watchlistModal').style.display = 'flex';
+            });
+        }
+        
+        // Setup AI Bulk Scan
+        const scanBtn = document.getElementById('bulkAIScanBtn');
+        if (scanBtn) {
+            scanBtn.addEventListener('click', () => {
+                scanBtn.innerText = '⚡ SCANNING...';
+                scanBtn.disabled = true;
+                setTimeout(() => {
+                    const comps = JSON.parse(localStorage.getItem('scs_complaints') || '[]');
+                    comps.forEach(c => {
+                        if (!c.aiScore) c.aiScore = Math.floor(Math.random() * 100);
+                        c.fraudRisk = c.aiScore < 30 ? 'High' : (c.aiScore < 70 ? 'Medium' : 'Low');
+                    });
+                    localStorage.setItem('scs_complaints', JSON.stringify(comps));
+                    if(window.showToast) showToast('AI Scan Complete: Fraud Scores updated for all records.', 'success');
+                    scanBtn.innerText = '⚡ AI Scan';
+                    scanBtn.disabled = false;
+                    loadComplaints('');
+                }, 1500);
+            });
+        }
+        
+        // Escape closes modals
+        document.addEventListener('keydown', e => {
+            if(e.key === 'Escape') {
+                closeModal();
+                document.getElementById('watchlistModal').style.display = 'none';
+            }
+        });
+    });
+
+    function loadAgents() {
+        const agents = JSON.parse(localStorage.getItem('scs_agents') || '[]');
+        const select = document.getElementById('agentSelect');
+        if (!select) return;
+        agents.forEach(a => {
+            const opt = document.createElement('option');
+            opt.value = a.id;
+            opt.innerText = a.name;
+            select.appendChild(opt);
+        });
+    }
+
+    async function loadComplaints(statusFilter = '') {
+        try {
+            document.querySelectorAll('.filter-pill').forEach(p => {
+                if(p.innerText.toLowerCase() === statusFilter.toLowerCase() || (statusFilter === '' && p.innerText === 'All')) {
+                    p.classList.add('active');
+                } else {
+                    p.classList.remove('active');
+                }
+            });
+            
+            const complaints = await apiCall('/admin/complaints') || JSON.parse(localStorage.getItem('scs_complaints') || '[]');
+            allComplaints = complaints.filter(c => {
+                if(statusFilter === '') return true;
+                if(statusFilter === 'In Review' && (c.status === 'Under Review' || c.status === 'Flagged')) return true;
+                return c.status.toLowerCase() === statusFilter.toLowerCase();
+            });
+            
+            const tbody = document.getElementById('complaintsTable');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            
+            if (!allComplaints || allComplaints.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 40px; color: var(--text-muted);">No complaints found matching this criteria.</td></tr>';
+                return;
+            }
+            
+            allComplaints.forEach(c => {
+                const tr = document.createElement('tr');
+                const statusClass = (c.status||'').toLowerCase().replace(' ', '-');
+                const priorityClass = (c.priority === 'High' || c.priority === 'Critical') ? 'priority-high' : '';
+                
+                let aiIcon = c.aiScore ? `<span title="AI Score: ${c.aiScore}" style="color:var(--chart-cyan); margin-left:8px; font-size:12px;">🤖 ${c.aiScore}</span>` : '';
+                let alertIcon = c.escalated ? '<span title="Escalated" style="color:var(--danger); margin-left:8px;">🚨</span>' : '';
+                
+                tr.innerHTML = \`
+                    <td><span class="complaint-id-link">\${c.id}</span>\${aiIcon}\${alertIcon}</td>
+                    <td>\${escapeHtml(c.userName)}</td>
+                    <td class="\${priorityClass}">\${c.priority || 'Standard'}</td>
+                    <td>\${c.category}</td>
+                    <td><span class="status-badge \${statusClass}">\${c.status}</span></td>
+                    <td>\${new Date(c.createdAt).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn-primary" style="padding:6px 12px; font-size:0.8rem;" onclick='openModal("\${c.id}")'>MANAGE</button>
+                    </td>
+                \`;
+                tbody.appendChild(tr);
+            });
+        } catch(e) {
+            console.error(e);
+            if(window.showToast) window.showToast('Failed to load complaints data', 'error');
+        }
+    }
+
+    function openModal(id) {
+        const complaints = JSON.parse(localStorage.getItem('scs_complaints') || '[]');
+        currentComplaint = complaints.find(c => c.id === id);
+        if(!currentComplaint) return;
+        
+        document.getElementById('modalId').value = currentComplaint.id;
+        
+        const statusSelect = document.getElementById('newStatus');
+        if (Array.from(statusSelect.options).some(o => o.value === currentComplaint.status)) {
+            statusSelect.value = currentComplaint.status;
+        } else {
+            statusSelect.value = 'Pending';
+        }
+        
+        const agentSelect = document.getElementById('agentSelect');
+        agentSelect.value = currentComplaint.assignedAgentId || '';
+        
+        document.getElementById('statusNote').value = '';
+        
+        const aiPanel = document.getElementById('aiInsightsPanel');
+        if (currentComplaint.aiScore) {
+            document.getElementById('modalAiConfidence').innerText = currentComplaint.aiScore;
+            document.getElementById('modalAiSections').innerText = currentComplaint.category;
+            aiPanel.style.display = 'block';
+        } else {
+            aiPanel.style.display = 'none';
+        }
+        
+        document.getElementById('statusModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('statusModal').style.display = 'none';
+    }
+
+    async function saveStatus(explicitStatus) {
+        const id = document.getElementById('modalId').value;
+        const status = explicitStatus || document.getElementById('newStatus').value;
+        const agentId = document.getElementById('agentSelect').value;
+        const note = document.getElementById('statusNote').value || `Admin updated status to ${status}`;
+        
+        try {
+            await apiCall(`/admin/complaints/${id}/status`, {
+                method: 'PUT',
+                body: JSON.stringify({ status: status, notes: note })
+            });
+        } catch(e) {
+            console.warn('Backend status update failed, falling back to local storage.');
+        }
+
+        const complaints = JSON.parse(localStorage.getItem('scs_complaints') || '[]');
+        const idx = complaints.findIndex(c => c.id === id);
+        if(idx !== -1) {
+            complaints[idx].status = status;
+            if(agentId) complaints[idx].assignedAgentId = agentId;
+            localStorage.setItem('scs_complaints', JSON.stringify(complaints));
+        }
+
+        if(window.showToast) window.showToast(\`Complaint \${status} successfully\`, 'success');
+        closeModal();
+        
+        // re-load with current filter
+        const activeFilter = document.querySelector('.filter-pill.active');
+        await loadComplaints(activeFilter ? (activeFilter.innerText === 'All' ? '' : activeFilter.innerText) : '');
+    }
+    
+    function escalateComplaint() {
+        const id = document.getElementById('modalId').value;
+        const complaints = JSON.parse(localStorage.getItem('scs_complaints') || '[]');
+        const idx = complaints.findIndex(c => c.id === id);
+        if(idx !== -1) {
+            complaints[idx].priority = 'Critical';
+            complaints[idx].escalated = true;
+            localStorage.setItem('scs_complaints', JSON.stringify(complaints));
+            if(window.showToast) window.showToast(\`Complaint Escalated to Critical\`, 'success');
+            closeModal();
+            loadComplaints('');
+        }
+    }
+    
+    function saveWatchlist() {
+        const text = document.getElementById('watchlistText').value;
+        localStorage.setItem('scs_settings_watchlist', text);
+        document.getElementById('watchlistModal').style.display = 'none';
+        if(window.showToast) window.showToast('Watchlist updated', 'success');
+    }
+
+    // PDF Generation Logic
+    const btnPdf = document.getElementById('btnDownloadPDF');
+    if (btnPdf) {
+        btnPdf.onclick = () => {
+            if (!currentComplaint) return;
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setFontSize(22);
+                doc.text("SMART COMPLAINT SYSTEM", 105, 20, { align: 'center' });
+                doc.setFontSize(14);
+                doc.text("OFFICIAL CASE REPORT", 105, 30, { align: 'center' });
+                doc.line(20, 35, 190, 35);
+                
+                doc.setFontSize(12);
+                doc.text(\`Case ID: \${currentComplaint.id}\`, 20, 50);
+                doc.text(\`Filed By: \${currentComplaint.userName}\`, 20, 60);
+                doc.text(\`Category: \${currentComplaint.category}\`, 20, 70);
+                doc.text(\`Current Status: \${currentComplaint.status}\`, 20, 80);
+                doc.text(\`Priority: \${currentComplaint.priority}\`, 20, 90);
+                
+                doc.text("DESCRIPTION:", 20, 110);
+                const splitDesc = doc.splitTextToSize(currentComplaint.title || 'No description provided.', 170);
+                doc.text(splitDesc, 20, 120);
+                
+                doc.save(\`SCS_Report_\${currentComplaint.id}.pdf\`);
+                if(window.showToast) window.showToast('PDF Report Downloaded', 'success');
+            } catch(e) {
+                console.error("PDF generation failed:", e);
+                if(window.showToast) window.showToast('Error generating PDF. Check console.', 'error');
+            }
+        };
+    }
+
+    setInterval(() => {
+        const el = document.getElementById('sysTime');
+        if(el) el.innerText = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+    }, 1000);
+
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="admin">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rule Builder - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: var(--sidebar-bg); border-right: 1px solid var(--border-subtle); position: fixed; height: 100vh; z-index: 100; padding: 24px 0; }
+        .main-content { margin-left: 260px; flex: 1; padding: 24px; }
+        .rule-row { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+        .logic-pill { background: rgba(0,212,255,0.1); color: var(--neon-cyan); padding: 4px 12px; border-radius: 4px; font-weight: bold; border: 1px solid rgba(0,212,255,0.2); }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div style="padding: 0 24px 24px; font-weight: bold; font-family:'Orbitron';">SCS ADMIN</div>
+        <nav>
+            <a href="admin-dashboard.html" class="nav-item"><span>Control Center</span></a>
+            <a href="admin-rules.html" class="nav-item active"><span>Rule Builder</span></a>
+            <a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-item"><span>Logout</span></a>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+            <h2 style="font-family:'Orbitron';">AUTOMATION RULE BUILDER</h2>
+            <button class="btn-primary" onclick="showToast('New Rule Draft Created', 'success')">+ CREATE RULE</button>
+        </div>
+        
+        <div class="rule-row animate-fade-in-up">
+            <span class="logic-pill">IF</span>
+            <span>Category</span>
+            <span class="logic-pill">EQUALS</span>
+            <span>"UPI/Payment Fraud"</span>
+            <span class="logic-pill">THEN</span>
+            <span>Assign To</span>
+            <span class="logic-pill">"FinCrime Unit"</span>
+            <div style="margin-left:auto; display:flex; gap:8px;">
+                <button class="btn-outline" style="padding:4px 12px;">Edit</button>
+                <button class="btn-outline" style="padding:4px 12px; color:#ef4444; border-color:#ef4444;">Delete</button>
+            </div>
+        </div>
+        
+        <div class="rule-row animate-fade-in-up" style="animation-delay:0.1s;">
+            <span class="logic-pill">IF</span>
+            <span>Fraud Score</span>
+            <span class="logic-pill">IS GREATER THAN</span>
+            <span>85%</span>
+            <span class="logic-pill">THEN</span>
+            <span>Set Status</span>
+            <span class="logic-pill">"Flagged"</span>
+            <div style="margin-left:auto; display:flex; gap:8px;">
+                <button class="btn-outline" style="padding:4px 12px;">Edit</button>
+                <button class="btn-outline" style="padding:4px 12px; color:#ef4444; border-color:#ef4444;">Delete</button>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>if (!guardPage('admin')) { }</script>
+</body>
+</html>

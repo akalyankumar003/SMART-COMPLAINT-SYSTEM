@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="admin">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Control Center - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --sidebar-bg: #111827;
+            --bg-card: #1e293b;
+            --border-subtle: #334155;
+            --primary-accent: #6366f1;
+            --secondary-accent: #0ea5e9;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body { margin: 0; padding: 0; background: var(--bg-primary); font-family: var(--font-main); color: var(--text-primary); }
+        .layout { display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--sidebar-bg); position: fixed; height: 100vh; z-index: 100; transition: 0.3s; padding: 0; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; overflow-y: auto; }
+        .sidebar-header { padding: 24px; display: flex; align-items: center; gap: 12px; }
+        .avatar-container { position: relative; }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent)); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron', sans-serif; font-weight: bold; border: 2px solid var(--primary-accent); color: white; }
+        .online-dot { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: var(--success); border-radius: 50%; border: 2px solid var(--sidebar-bg); }
+        
+        .role-badge { background: rgba(99,102,241,0.2); color: var(--primary-accent); padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; margin-top: 4px; display: inline-block; border: 1px solid rgba(99,102,241,0.3); }
+        
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; margin: 4px 12px; border-radius: 8px; color: var(--text-secondary); text-decoration: none; transition: all 0.2s ease; position: relative; font-size: 14px; }
+        .nav-item:hover { background: rgba(99,102,241,0.08); color: var(--text-primary); }
+        .nav-item.active { background: #1e3a5f; color: var(--text-primary); border-left: 3px solid var(--primary-accent); border-radius: 0 8px 8px 0; }
+        .nav-icon { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .nav-divider { height: 1px; background: var(--border-subtle); margin: 16px 20px; }
+        
+        .badge-new { background: var(--primary-accent); color: white; font-size: 9px; padding: 2px 6px; border-radius: 8px; margin-left: auto; font-weight: bold; letter-spacing: 0.5px;}
+
+        /* Main Content */
+        .main-content { margin-left: 260px; flex: 1; padding: 0 0 24px 0; background: var(--bg-primary); }
+        
+        .topbar { height: 64px; background: var(--sidebar-bg); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 99; }
+        .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 600; color: var(--text-primary); }
+        .sys-time { color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+        
+        .content-container { padding: 24px; }
+
+        /* SLA Banner */
+        .sla-banner { display: none; background: rgba(245,158,11,0.1); border: 1px solid var(--warning); border-radius: 12px; padding: 16px; margin-bottom: 24px; align-items: center; gap: 16px; animation: pulse-amber 2s infinite; }
+        .sla-banner.active { display: flex; }
+        @keyframes pulse-amber { 0% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); } 70% { box-shadow: 0 0 0 10px rgba(245,158,11,0); } 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); } }
+
+        /* Quick Actions Grid */
+        .quick-actions-section { margin-bottom: 24px; }
+        .section-label { font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.06em; margin-bottom: 12px; font-weight: 600; }
+        .quick-actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .quick-action-btn { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px; color: var(--text-primary); text-align: center; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 500; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .quick-action-btn:hover { border-color: var(--primary-accent); background: rgba(99,102,241,0.05); transform: translateY(-2px); }
+        
+        /* Stat Cards with Sparklines */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 20px; transition: all 0.3s ease; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+        .stat-card:hover { border-color: var(--primary-accent); }
+        .stat-icon-circle { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .stat-icon-circle.primary { background: rgba(99,102,241,0.2); color: var(--primary-accent); }
+        .stat-icon-circle.success { background: rgba(34,197,94,0.2); color: var(--success); }
+        .stat-icon-circle.danger { background: rgba(239,68,68,0.2); color: var(--danger); }
+        .stat-icon-circle.warning { background: rgba(245,158,11,0.2); color: var(--warning); }
+        .stat-label { color: var(--text-secondary); font-size: 12px; font-weight: 500; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+        .stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;}
+        .stat-trend { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 12px; }
+        .trend-up { color: var(--success); }
+        .trend-down { color: var(--danger); }
+        .sparkline-container { height: 30px; width: 100%; margin-top: auto; }
+
+        /* Dashboard Layout: 2 Cols */
+        .dashboard-cols { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px; }
+
+        /* Tables & Cards */
+        .card { background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 24px; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .card-title { font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0; }
+        
+        .data-table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+        .data-table th { text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; background: var(--sidebar-bg); border-bottom: 1px solid var(--border-subtle); letter-spacing: 0.05em; }
+        .data-table td { padding: 12px 16px; font-size: 13px; color: #cbd5e1; border-bottom: 1px solid var(--border-subtle); }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tr:hover { background: rgba(255,255,255,0.02); }
+        
+        /* Badges */
+        .pill { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+        .pill-success { background: rgba(34,197,94,0.1); color: var(--success); border: 1px solid rgba(34,197,94,0.2); }
+        .pill-warning { background: rgba(245,158,11,0.1); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+        .pill-danger { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+        
+        .ai-tooltip { position: relative; cursor: pointer; }
+        .ai-tooltip:hover::after { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #000; color: white; padding: 8px 12px; border-radius: 6px; font-size: 11px; white-space: pre; z-index: 10; pointer-events: none; border: 1px solid var(--border-subtle); }
+
+        /* Agent Load Bar */
+        .load-bar-bg { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; width: 100%; }
+        .load-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+
+        /* Live Activity Feed */
+        .feed-list { display: flex; flex-direction: column; gap: 16px; overflow-y: auto; max-height: 400px; padding-right: 8px; }
+        .feed-list::-webkit-scrollbar { width: 4px; }
+        .feed-list::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 4px; }
+        .feed-item { display: flex; gap: 12px; position: relative; }
+        .feed-item::before { content: ''; position: absolute; left: 4px; top: 16px; bottom: -16px; width: 2px; background: var(--border-subtle); }
+        .feed-item:last-child::before { display: none; }
+        .feed-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--primary-accent); margin-top: 4px; z-index: 1; box-shadow: 0 0 0 4px var(--bg-card); }
+        .feed-content { flex: 1; }
+        .feed-text { font-size: 13px; color: var(--text-primary); margin-bottom: 4px; }
+        .feed-time { font-size: 11px; color: var(--text-muted); }
+
+        @media (max-width: 1200px) {
+            .dashboard-cols { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .quick-actions-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="avatar-container">
+                <div class="avatar">AD</div>
+                <div class="online-dot"></div>
+            </div>
+            <div>
+                <div style="font-weight: bold; color: white;">Administrator</div>
+                <div class="role-badge">SUPER ADMIN</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="admin-dashboard.html" class="nav-item active">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                <span>Control Center</span>
+            </a>
+            <a href="admin-complaints.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                <span>All Complaints</span>
+            </a>
+            <a href="admin-users.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <span>User Management</span>
+            </a>
+            <a href="admin-sla.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>SLA Monitor</span>
+                <span class="badge-new">NEW</span>
+            </a>
+            <a href="admin-detector.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                <span>Fake Detector</span>
+                <span class="badge-new">NEW</span>
+            </a>
+            <a href="admin-heatmap.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                <span>Trend Insights</span>
+                <span class="badge-new">NEW</span>
+            </a>
+            <a href="admin-rules.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span>Rule Builder</span>
+                <span class="badge-new">NEW</span>
+            </a>
+            <a href="admin-audit.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <span>Audit Logs</span>
+                <span class="badge-new">NEW</span>
+            </a>
+            <div class="nav-divider"></div>
+            <a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>System Exit</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="breadcrumb">Control Center</div>
+            <div class="sys-time" id="sysTime"></div>
+        </header>
+
+        <div class="content-container">
+            <!-- SLA Breach Alert Banner -->
+            <div class="sla-banner" id="slaBanner">
+                <div style="font-size: 1.5rem;">⚠️</div>
+                <div style="flex:1;">
+                    <div style="font-weight: bold; color: var(--warning);">SLA BREACH ALERT</div>
+                    <div style="font-size: 13px; color: var(--text-primary);">3 complaints have breached the 48-hour resolution SLA. Immediate attention required.</div>
+                </div>
+                <button onclick="document.getElementById('slaBanner').style.display='none'" style="background:var(--warning); color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">View Now</button>
+                <button onclick="document.getElementById('slaBanner').style.display='none'" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; font-size:20px;">&times;</button>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions-section">
+                <div class="section-label">Quick Actions</div>
+                <div class="quick-actions-grid">
+                    <div class="quick-action-btn" onclick="window.location.href='admin-complaints.html'">
+                        <span style="font-size:20px;">📋</span> All Complaints
+                    </div>
+                    <div class="quick-action-btn" onclick="window.location.href='admin-users.html'">
+                        <span style="font-size:20px;">👥</span> Manage Users
+                    </div>
+                    <div class="quick-action-btn" onclick="alert('Running AI Scan...')">
+                        <span style="font-size:20px;">🤖</span> Run AI Scan
+                    </div>
+                    <div class="quick-action-btn" onclick="window.location.href='admin-sla.html'">
+                        <span style="font-size:20px;">⏱️</span> SLA Monitor
+                    </div>
+                    <div class="quick-action-btn" onclick="alert('Exporting Report...')">
+                        <span style="font-size:20px;">📥</span> Export Report
+                    </div>
+                    <div class="quick-action-btn" onclick="alert('Watchlist opened')">
+                        <span style="font-size:20px;">👁️</span> Keyword Watchlist
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon-circle primary"><svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg></div>
+                    <div class="stat-label">Total Volume</div>
+                    <div class="stat-value">1,284</div>
+                    <div class="stat-trend trend-up">↑ 12% vs last week</div>
+                    <div class="sparkline-container"><canvas id="sparkTotal"></canvas></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-circle warning"><svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                    <div class="stat-label">Pending Review</div>
+                    <div class="stat-value">342</div>
+                    <div class="stat-trend trend-down">↓ 5% vs last week</div>
+                    <div class="sparkline-container"><canvas id="sparkPending"></canvas></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-circle success"><svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                    <div class="stat-label">Resolved</div>
+                    <div class="stat-value">890</div>
+                    <div class="stat-trend trend-up">↑ 18% vs last week</div>
+                    <div class="sparkline-container"><canvas id="sparkResolved"></canvas></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon-circle danger"><svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
+                    <div class="stat-label">AI Flags (High Risk)</div>
+                    <div class="stat-value">52</div>
+                    <div class="stat-trend trend-up">↑ 3% vs last week</div>
+                    <div class="sparkline-container"><canvas id="sparkRisk"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Two Cols: Recent Complaints & Live Activity -->
+            <div class="dashboard-cols">
+                <div class="card" style="padding:0; overflow:hidden;">
+                    <div class="card-header" style="padding:20px 24px 0;">
+                        <h3 class="card-title">Recent Complaints</h3>
+                        <a href="admin-complaints.html" style="font-size:13px; color:var(--primary-accent); text-decoration:none; font-weight:500;">View All →</a>
+                    </div>
+                    <div style="padding:20px 0;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="padding-left:24px;">ID</th>
+                                    <th>Category</th>
+                                    <th>AI Score</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentTable">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Live Activity Feed</h3>
+                    </div>
+                    <div class="feed-list" id="activityFeed">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agent Performance Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Agent Performance Monitor</h3>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Agent Name</th>
+                                <th>Assigned</th>
+                                <th>Resolved</th>
+                                <th>Avg Time</th>
+                                <th>Rating</th>
+                                <th>Load Bar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Officer Sharma</td>
+                                <td>45</td>
+                                <td>112</td>
+                                <td>1.2 days</td>
+                                <td>⭐⭐⭐⭐⭐</td>
+                                <td style="width:200px;">
+                                    <div class="load-bar-bg"><div class="load-bar-fill" style="width:85%; background:var(--warning)"></div></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Officer Verma</td>
+                                <td>20</td>
+                                <td>85</td>
+                                <td>0.8 days</td>
+                                <td>⭐⭐⭐⭐</td>
+                                <td>
+                                    <div class="load-bar-bg"><div class="load-bar-fill" style="width:42%; background:var(--success)"></div></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Officer Khan</td>
+                                <td>50</td>
+                                <td>90</td>
+                                <td>1.5 days</td>
+                                <td>⭐⭐⭐</td>
+                                <td>
+                                    <div class="load-bar-bg"><div class="load-bar-fill" style="width:94%; background:var(--danger)"></div></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Officer Reddy</td>
+                                <td>10</td>
+                                <td>150</td>
+                                <td>0.5 days</td>
+                                <td>⭐⭐⭐⭐⭐</td>
+                                <td>
+                                    <div class="load-bar-bg"><div class="load-bar-fill" style="width:15%; background:var(--success)"></div></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script>
+
+    // --- Init ---
+    setInterval(() => {
+        document.getElementById('sysTime').innerText = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+    }, 1000);
+
+    setTimeout(() => {
+        document.getElementById('slaBanner').classList.add('active');
+    }, 1500);
+
+    // --- Mock Data: Recent Complaints ---
+    const recentComplaints = [
+        { id: 'SCS-2026-0012', cat: 'UPI Fraud', score: 95, status: 'pending', date: 'Just now' },
+        { id: 'SCS-2026-0011', cat: 'Phishing', score: 62, status: 'resolved', date: '2 hours ago' },
+        { id: 'SCS-2026-0010', cat: 'Account Hack', score: 25, status: 'suspended', date: '5 hours ago' },
+        { id: 'SCS-2026-0009', cat: 'Identity Theft', score: 88, status: 'pending', date: '1 day ago' },
+        { id: 'SCS-2026-0008', cat: 'Crypto Scam', score: 55, status: 'resolved', date: '1 day ago' },
+    ];
+
+    function renderRecent() {
+        const tbody = document.getElementById('recentTable');
+        recentComplaints.forEach(c => {
+            const tr = document.createElement('tr');
+            
+            let statusPill = '';
+            if(c.status==='pending') statusPill = '<span class="pill pill-warning">PENDING</span>';
+            if(c.status==='resolved') statusPill = '<span class="pill pill-success">RESOLVED</span>';
+            if(c.status==='suspended') statusPill = '<span class="pill pill-danger">SUSPENDED</span>';
+
+            let aiScoreHtml = '';
+            if(c.score >= 80) aiScoreHtml = \`<span class="pill pill-success ai-tooltip" data-tooltip="Text Coherence: 90%\\nIP Risk: Low\\nBehavior: Normal">Genuine (\${c.score}%)</span>\`;
+            else if(c.score >= 50) aiScoreHtml = \`<span class="pill pill-warning ai-tooltip" data-tooltip="Text Coherence: 60%\\nIP Risk: Medium\\nKeywords: 'Urgent', 'Money'">Review (\${c.score}%)</span>\`;
+            else aiScoreHtml = \`<span class="pill pill-danger ai-tooltip" data-tooltip="Text Coherence: 30%\\nIP Risk: High (VPN)\\nKnown Scammer Patterns">Fake (\${c.score}%)</span>\`;
+
+            tr.innerHTML = \`
+                <td style="padding-left:24px; font-family:'JetBrains Mono'; color:var(--text-primary)">\${c.id}</td>
+                <td>\${c.cat}</td>
+                <td>\${aiScoreHtml}</td>
+                <td>\${statusPill}</td>
+                <td>\${c.date}</td>
+            \`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // --- Mock Data: Live Feed ---
+    const feedEvents = [
+        "User 'rahul@test.com' filed a new complaint",
+        "AI flagged SCS-2026-0010 as Fake",
+        "Agent Sharma resolved SCS-2025-0999",
+        "New user 'amit@test.com' registered",
+        "SLA warning triggered for SCS-2026-0001",
+        "System backup completed successfully",
+        "User 'sneha.g' was suspended"
+    ];
+    
+    function renderFeed() {
+        const list = document.getElementById('activityFeed');
+        list.innerHTML = '';
+        feedEvents.forEach((txt, i) => {
+            const el = document.createElement('div');
+            el.className = 'feed-item';
+            el.innerHTML = \`
+                <div class="feed-dot" style="background: \${i===0?'var(--success)':(i===1?'var(--danger)':'var(--primary-accent)')}"></div>
+                <div class="feed-content">
+                    <div class="feed-text">\${txt}</div>
+                    <div class="feed-time">\${i===0?'Just now':i*5+' mins ago'}</div>
+                </div>
+            \`;
+            list.appendChild(el);
+        });
+    }
+    
+    setInterval(() => {
+        // simulate new event
+        const r = Math.floor(Math.random()*100);
+        feedEvents.unshift("System generated automated report #" + r);
+        if(feedEvents.length > 10) feedEvents.pop();
+        renderFeed();
+    }, 30000);
+
+    // --- Sparklines using Chart.js ---
+    function drawSparkline(id, data, color, bgColor) {
+        const el = document.getElementById(id);
+        if(!el) return;
+        
+        window.chartRegistry = window.chartRegistry || {};
+        if (window.chartRegistry[id]) {
+            window.chartRegistry[id].destroy();
+        }
+        
+        const ctx = el.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 30);
+        gradient.addColorStop(0, bgColor);
+        gradient.addColorStop(1, 'transparent');
+        
+        window.chartRegistry[id] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['1','2','3','4','5','6','7'],
+                datasets: [{
+                    data: data,
+                    borderColor: color,
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                scales: {
+                    x: { display: false },
+                    y: { display: false, min: 0 }
+                },
+                layout: { padding: 0 }
+            }
+        });
+    }
+
+    window.onload = () => {
+        // Load stats from localStorage
+        const complaints = JSON.parse(localStorage.getItem('scs_complaints') || '[]');
+        let total = complaints.length;
+        let pending = 0;
+        let resolved = 0;
+        let risk = 0;
+        
+        complaints.forEach(c => {
+            const s = (c.status || '').toLowerCase();
+            if (s.includes('pending') || s.includes('review')) pending++;
+            else if (s.includes('resolv')) resolved++;
+            
+            if (c.aiScore < 30 || c.fraudRisk === 'High') risk++;
+        });
+        
+        const statElements = document.querySelectorAll('.stat-value');
+        if(statElements.length >= 4) {
+            statElements[0].innerText = total || '1,284';
+            statElements[1].innerText = pending || '342';
+            statElements[2].innerText = resolved || '890';
+            statElements[3].innerText = risk || '52';
+        }
+        
+        renderRecent();
+        renderFeed();
+        
+        // Draw sparklines safely
+        drawSparkline('sparkTotal', [12, 19, 15, 25, 22, 30, 28], '#6366f1', 'rgba(99,102,241,0.5)');
+        drawSparkline('sparkPending', [30, 28, 25, 22, 20, 18, 15], '#f59e0b', 'rgba(245,158,11,0.5)');
+        drawSparkline('sparkResolved', [5, 10, 12, 15, 20, 25, 35], '#22c55e', 'rgba(34,197,94,0.5)');
+        drawSparkline('sparkRisk', [2, 5, 4, 8, 6, 9, 12], '#ef4444', 'rgba(239,68,68,0.5)');
+    };
+</script>
+</body>
+</html>

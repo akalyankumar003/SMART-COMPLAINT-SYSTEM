@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Complaint System - India's Advanced Cyber Crime Portal</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/home.css">
+</head>
+<body>
+
+<nav id="navbar">
+    <div class="nav-left">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+        <span class="cyan">Smart</span> <span class="white">Complaint</span> <span class="purple">System</span>
+    </div>
+    <div class="nav-center">
+        <a href="#">Home</a>
+        <a href="#how-it-works">Features</a>
+        <a href="#categories">Categories</a>
+        <a href="#heatmap-preview">Statistics</a>
+        <a href="#contact">Contact</a>
+    </div>
+    <div class="nav-right">
+        <button id="themeToggle" style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem;">🌓</button>
+        <a href="login.html" class="btn-outline">LOGIN</a>
+        <a href="register.html" class="btn-primary">REGISTER</a>
+        <a href="admin-login.html" style="font-size:0.8rem; color:var(--neon-purple); margin-left:8px;">ADMIN</a>
+    </div>
+</nav>
+
+<section id="hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="hero-overlay"></div>
+    <div class="scan-line"></div>
+    
+    <div class="hero-content">
+        <div class="live-badge animate-fade-in-up">
+            <div class="dot animate-pulse-neon"></div>
+            LIVE SYSTEM ACTIVE
+        </div>
+        
+        <div class="hero-heading">
+            <div class="line1 animate-slide-in-left">INDIA'S MOST ADVANCED</div>
+            <div class="line2 animate-slide-in-right" style="animation-delay: 0.2s;">SMART COMPLAINT</div>
+            <div class="line3 animate-slide-in-left" style="animation-delay: 0.4s;">PORTAL</div>
+        </div>
+        
+        <p style="color:var(--text-muted); max-width:600px; margin:20px 0; font-size:1.2rem;" class="animate-fade-in-up">
+            File complaints, track investigations, and fight cybercrime with AI-powered assistance. Your digital justice system.
+        </p>
+        
+        <div style="display:flex; gap:16px; margin-top:20px;" class="animate-fade-in-up">
+            <a href="register.html" class="btn-primary">🛡️ FILE A COMPLAINT</a>
+            <button class="btn-outline" onclick="alert('Tracking coming soon')">🔍 TRACK COMPLAINT</button>
+        </div>
+        
+        <div class="stats-row animate-fade-in-up" style="animation-delay: 1s;">
+            <div class="stat-pill"><span id="hero-stat-1" class="cyan">0</span> Complaints Filed</div>
+            <div class="stat-pill"><span id="hero-stat-2" class="purple">0</span> Cases Resolved</div>
+            <div class="stat-pill"><span id="hero-stat-3" class="cyan">0</span>% Success Rate</div>
+        </div>
+        
+        <div style="position:absolute; bottom:40px; animation: bounce-arrow 1.5s ease infinite;">
+            <svg width="24" height="24" fill="white" viewBox="0 0 24 24"><path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg>
+            <div style="font-size:0.8rem; color:var(--text-muted);">Scroll</div>
+        </div>
+    </div>
+</section>
+
+<div id="live-stats">
+    <div class="stat-item">
+        <div class="stat-num" data-target="15234">0</div>
+        <div class="muted">Active Cases</div>
+    </div>
+    <div class="divider"></div>
+    <div class="stat-item">
+        <div class="stat-num" data-target="12891">0</div>
+        <div class="muted">Resolved Today</div>
+    </div>
+    <div class="divider"></div>
+    <div class="stat-item">
+        <div class="stat-num" data-target="487">0</div>
+        <div class="muted">Officers Online</div>
+    </div>
+    <div class="divider"></div>
+    <div class="stat-item">
+        <div class="stat-num" data-target="28">0</div>
+        <div class="muted">States Covered</div>
+    </div>
+</div>
+
+<section id="how-it-works">
+    <h2 class="section-title">HOW IT WORKS</h2>
+    <div class="neon-underline animate-pulse-neon"></div>
+    
+    <div class="steps-grid">
+        <div class="dashed-line"></div>
+        <div class="card step-card">
+            <div class="step-num">1</div>
+            <div style="font-size: 3rem; margin-bottom: 20px;" class="animate-float">👤</div>
+            <h3 style="color:var(--neon-cyan)">REGISTER & VERIFY</h3>
+            <p class="muted">Create an account securely with phone and email OTP verification.</p>
+        </div>
+        <div class="card step-card">
+            <div class="step-num">2</div>
+            <div style="font-size: 3rem; margin-bottom: 20px;">📄<span style="animation: typing-cursor 1s infinite">|</span></div>
+            <h3 style="color:var(--neon-cyan)">FILE COMPLAINT</h3>
+            <p class="muted">Use our AI wizard or voice recording to submit your evidence securely.</p>
+        </div>
+        <div class="card step-card">
+            <div class="step-num">3</div>
+            <div style="font-size: 3rem; margin-bottom: 20px;">📈</div>
+            <h3 style="color:var(--neon-cyan)">TRACK & RESOLVE</h3>
+            <p class="muted">Get real-time updates and chat directly with investigating officers.</p>
+        </div>
+    </div>
+</section>
+
+<section id="features">
+    <h2 class="section-title">POWERFUL FEATURES</h2>
+    <div class="features-tabs">
+        <button class="feature-tab active" onclick="switchFeatures('citizen')">FOR CITIZENS</button>
+        <button class="feature-tab" onclick="switchFeatures('admin')">FOR ADMINISTRATORS</button>
+    </div>
+    
+    <div id="features-citizen" class="features-grid">
+        <div class="card feature-item"><div class="icon">🤖</div><h3>AI Categorization</h3><p class="muted">Auto-detects crime type from description.</p></div>
+        <div class="card feature-item"><div class="icon">🎤</div><h3>Voice Filing</h3><p class="muted">Speak your complaint naturally.</p></div>
+        <div class="card feature-item"><div class="icon">💬</div><h3>Real-Time Chat</h3><p class="muted">Direct line to assigned officers.</p></div>
+        <div class="card feature-item"><div class="icon">📄</div><h3>OCR Evidence</h3><p class="muted">Extracts text from screenshots automatically.</p></div>
+        <div class="card feature-item"><div class="icon">🌐</div><h3>Multi-Language</h3><p class="muted">Support for 8 Indian languages.</p></div>
+        <div class="card feature-item"><div class="icon">⚖️</div><h3>Legal Chatbot</h3><p class="muted">Instant guidance on IT Act sections.</p></div>
+    </div>
+    
+    <div id="features-admin" class="features-grid hidden">
+        <div class="card feature-item"><div class="icon">⚡</div><h3>AI Prioritization</h3><p class="muted">Auto-scores urgency based on loss and type.</p></div>
+        <div class="card feature-item"><div class="icon">🗺️</div><h3>Heatmap Analytics</h3><p class="muted">Live view of crime hotspots.</p></div>
+        <div class="card feature-item"><div class="icon">⚠️</div><h3>Fraud Detection</h3><p class="muted">Flags linked phone numbers across complaints.</p></div>
+        <div class="card feature-item"><div class="icon">🔬</div><h3>Forensic Viewer</h3><p class="muted">Extracts EXIF and metadata from uploads.</p></div>
+        <div class="card feature-item"><div class="icon">🤖</div><h3>Email Responder</h3><p class="muted">AI-drafted status updates for users.</p></div>
+        <div class="card feature-item"><div class="icon">📜</div><h3>Audit Log</h3><p class="muted">Tracks every system interaction.</p></div>
+    </div>
+</section>
+
+<section id="categories">
+    <h2 class="section-title">CYBERCRIME CATEGORIES WE HANDLE</h2>
+    <div class="ticker-wrap">
+        <div class="ticker-inner" id="categoryTicker"></div>
+    </div>
+</section>
+
+<section id="emergency" class="emergency-section">
+    <h2 style="color:var(--neon-pink); font-family:'Orbitron'; font-size:2.5rem;">EMERGENCY CYBER INCIDENT?</h2>
+    <p class="white" style="font-size:1.2rem; margin-top:10px;">Immediate action required for active financial fraud.</p>
+    <button class="btn-emergency" onclick="alert('Opening Emergency Dialog...')">REPORT EMERGENCY NOW</button>
+    <div style="margin-top:40px; font-size:1.5rem;">
+        Helpline: <b class="cyan">1930</b>
+    </div>
+</section>
+
+<footer>
+    <div class="footer-grid">
+        <div>
+            <h3 class="cyan" style="margin-bottom:16px;">SMART COMPLAINT SYSTEM</h3>
+        </div>
+        <div>
+            <h4 style="margin-bottom:16px;">Quick Links</h4>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <a href="#">Home</a>
+                <a href="#how-it-works">Features</a>
+                <a href="login.html">Login</a>
+            </div>
+        </div>
+        <div>
+            <h4 style="margin-bottom:16px;">Legal</h4>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Disclaimer</a>
+            </div>
+        </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 20px;">
+            <div>© 2026 Smart Complaint System. All Rights Reserved.</div>
+            <div style="margin-left: 20px;">Made in India 🇮🇳</div>
+        </div>
+    </div>
+</footer>
+
+<script src="js/theme.js"></script>
+<script>
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+        if(window.scrollY > 50) document.getElementById('navbar').classList.add('scrolled');
+        else document.getElementById('navbar').classList.remove('scrolled');
+    });
+
+    // Hero Canvas
+    const canvas = document.getElementById('hero-canvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+    
+    window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    });
+
+    const particles = [];
+    for(let i=0; i<80; i++) {
+        particles.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            vx: (Math.random() - 0.5) * 1,
+            vy: (Math.random() - 0.5) * 1,
+            size: Math.random() * 2 + 1,
+            color: Math.random() > 0.5 ? '#00d4ff' : '#7b2fff'
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, width, height);
+        particles.forEach((p, i) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            if(p.x < 0 || p.x > width) p.vx *= -1;
+            if(p.y < 0 || p.y > height) p.vy *= -1;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+            for(let j=i+1; j<particles.length; j++) {
+                const p2 = particles[j];
+                const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                if(dist < 120) {
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.strokeStyle = `rgba(0, 212, 255, ${1 - dist/120})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+        });
+        requestAnimationFrame(draw);
+    }
+    draw();
+
+    // Stats counter
+    let animated = false;
+    window.addEventListener('scroll', () => {
+        const stats = document.getElementById('live-stats');
+        if(stats.getBoundingClientRect().top < window.innerHeight && !animated) {
+            animated = true;
+            document.querySelectorAll('.stat-num').forEach(el => {
+                const target = +el.getAttribute('data-target');
+                let count = 0;
+                const inc = target / 50;
+                const timer = setInterval(() => {
+                    count += inc;
+                    if(count >= target) {
+                        el.innerText = target.toLocaleString();
+                        clearInterval(timer);
+                    } else {
+                        el.innerText = Math.floor(count).toLocaleString();
+                    }
+                }, 20);
+            });
+        }
+    });
+
+    // Hero mock counters
+    let hc1 = 0, hc2 = 0;
+    setInterval(() => {
+        if(hc1 < 12847) document.getElementById('hero-stat-1').innerText = (hc1+=123).toLocaleString();
+        if(hc2 < 9234) document.getElementById('hero-stat-2').innerText = (hc2+=89).toLocaleString();
+        document.getElementById('hero-stat-3').innerText = "98.2";
+    }, 20);
+
+    // Feature tabs
+    function switchFeatures(type) {
+        document.querySelectorAll('.feature-tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('features-citizen').classList.add('hidden');
+        document.getElementById('features-admin').classList.add('hidden');
+        document.getElementById('features-' + type).classList.remove('hidden');
+    }
+
+    // Categories Ticker
+    const cats = [
+        {n:'UPI Fraud', c:'#ff006e'}, {n:'Hacking', c:'#ffaa00'}, {n:'Job Scam', c:'#ffea00'},
+        {n:'Phishing', c:'#00d4ff'}, {n:'Ransomware', c:'#7b2fff'}, {n:'Identity Theft', c:'#00ff88'}
+    ];
+    const ticker = document.getElementById('categoryTicker');
+    let html = '';
+    cats.forEach(c => html += `<div class="category-pill"><div class="pill-dot" style="background:${c.c}"></div>${c.n}</div>`);
+    ticker.innerHTML = html + html + html; // duplicate for smooth scroll
+    
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+</script>
+</body>
+</html>

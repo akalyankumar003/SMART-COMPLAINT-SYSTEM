@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background: rgba(0,5,30,0.95); backdrop-filter: blur(20px); border-right: 1px solid var(--border-neon); position: fixed; height: 100vh; z-index: 100; padding: 20px 0; }
+        .main-content { margin-left: 280px; flex: 1; padding: 24px; }
+        .profile-card { max-width: 800px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-neon); border-radius: 16px; padding: 40px; }
+        .avatar-upload { width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; font-size: 4rem; position: relative; cursor: pointer; overflow: hidden; border: 4px solid rgba(0,212,255,0.3); }
+        .avatar-upload:hover::after { content: 'CHANGE'; position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-family: 'Orbitron'; }
+        .avatar-upload img { width: 100%; height: 100%; object-fit: cover; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div style="padding: 0 20px 20px; font-weight: bold; font-family:'Orbitron';">SCS PORTAL</div>
+        <nav>
+            <a href="dashboard.html" class="nav-item">🏠 Dashboard</a>
+            <a href="my-complaints.html" class="nav-item">📋 My Complaints</a>
+            <a href="profile.html" class="nav-item active">👤 My Profile</a>
+            <a href="notifications.html" class="nav-item">🔔 Notifications</a>
+            <a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-item">🚪 Logout</a>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <div class="profile-card">
+            <h2 style="font-family:'Orbitron'; margin-bottom: 32px; text-align:center;">USER PROFILE</h2>
+            <div style="text-align:center;">
+                <div class="avatar-upload" id="avatarBox">U</div>
+                <input type="file" id="avatarInput" style="display:none;" accept="image/*">
+            </div>
+            <form id="profileForm">
+                <div class="form-grid">
+                    <div class="form-group"><label>Full Name</label><input type="text" id="profName" required></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="profEmail" required></div>
+                    <div class="form-group"><label>Phone</label><input type="tel" id="profPhone" required></div>
+                    <div class="form-group"><label>State</label><input type="text" id="profState" readonly></div>
+                </div>
+                <div style="margin-top:32px; display:flex; justify-content:center;">
+                    <button type="submit" class="btn-primary" style="width:250px;">UPDATE SETTINGS</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+    if (!guardPage('user')) { }
+    const user = JSON.parse(localStorage.getItem('scs_user'));
+    
+    async function loadProfile() {
+        try {
+            // In a real app, fetch fresh data from /auth/profile
+            document.getElementById('profName').value = user.fullName;
+            document.getElementById('profEmail').value = user.email;
+            document.getElementById('profPhone').value = user.phone || '9999999999';
+            document.getElementById('profState').value = user.state || 'Delhi';
+            document.getElementById('avatarBox').innerText = user.fullName[0].toUpperCase();
+            
+            if (user.avatar) {
+                document.getElementById('avatarBox').innerHTML = `<img src="${user.avatar}">`;
+            }
+        } catch(e) {}
+    }
+
+    document.getElementById('avatarBox').onclick = () => document.getElementById('avatarInput').click();
+    
+    document.getElementById('avatarInput').onchange = (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (re) => {
+            document.getElementById('avatarBox').innerHTML = `<img src="${re.target.result}">`;
+            // Normally upload to server here
+            showToast('Profile photo updated', 'success');
+        };
+        reader.readAsDataURL(file);
+    };
+
+    document.getElementById('profileForm').onsubmit = async (e) => {
+        e.preventDefault();
+        showToast('Profile settings saved', 'success');
+    };
+
+    window.onload = loadProfile;
+</script>
+</body>
+</html>

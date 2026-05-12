@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="admin">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crime Heatmap - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        body { margin: 0; padding: 0; background: var(--bg-primary); }
+        .layout { display: flex; min-height: 100vh; }
+        
+        .sidebar { width: 260px; background: var(--sidebar-bg); position: fixed; height: 100vh; z-index: 100; transition: 0.3s; padding: 0; border-right: 1px solid var(--border-subtle); }
+        .sidebar-header { padding: 24px; display: flex; align-items: center; gap: 12px; }
+        .avatar-container { position: relative; }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-weight: bold; border: 2px solid var(--neon-primary); color: white; }
+        .online-dot { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: var(--success); border-radius: 50%; border: 2px solid var(--sidebar-bg); }
+        
+        .role-badge { background: linear-gradient(135deg, rgba(217,70,239,0.2), rgba(139,92,246,0.2)); color: var(--neon-primary); padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: bold; margin-top: 4px; display: inline-block; box-shadow: var(--glow-magenta); border: 1px solid rgba(217,70,239,0.3); }
+        
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; margin: 4px 12px; border-radius: 8px; color: var(--text-secondary); text-decoration: none; transition: all 0.2s ease; position: relative; font-size: 14px; }
+        .nav-item:hover { background: rgba(217,70,239,0.08); color: var(--text-primary); }
+        .nav-item.active { background: rgba(217,70,239,0.15); color: var(--neon-primary); box-shadow: inset 3px 0 0 var(--neon-primary); }
+        .nav-item.active .nav-icon { filter: drop-shadow(0 0 8px var(--neon-primary)); }
+        .nav-icon { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .nav-divider { height: 1px; background: var(--border-subtle); margin: 16px 20px; }
+        
+        .main-content { margin-left: 260px; flex: 1; padding: 0 0 24px 0; background: var(--bg-primary); }
+        
+        .topbar { height: 64px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 99; }
+        .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 14px; font-family: 'Orbitron', sans-serif; }
+        .breadcrumb-item { color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .breadcrumb-item.active { color: var(--neon-primary); font-weight: 500; }
+        
+        .sys-time { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+        
+        .content-container { padding: 24px; }
+        
+        .heatmap-container { height: calc(100vh - 180px); background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+        .map-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border-subtle); }
+        .map-title { font-family: 'Orbitron'; font-size: 1rem; color: white; margin: 0; display: flex; align-items: center; gap: 10px; }
+        
+        .map-view { flex: 1; position: relative; background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a14 100%); background-image: 
+            linear-gradient(rgba(217,70,239,0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(217,70,239,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        .map-legend { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); border: 1px solid var(--border-subtle); padding: 16px; border-radius: 12px; backdrop-filter: blur(8px); }
+        .legend-title { font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; font-weight: 700; }
+        .legend-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 12px; color: white; }
+        .l-dot { width: 10px; height: 10px; border-radius: 50%; }
+        
+        .map-overlay { position: absolute; inset: 0; pointer-events: none; }
+        .hotspot { position: absolute; width: 60px; height: 60px; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: auto; cursor: pointer; }
+        .hotspot::before { content: ''; position: absolute; inset: 0; border-radius: 50%; opacity: 0.4; animation: pulse-hotspot 2s infinite; }
+        .hotspot.high::before { background: var(--danger); box-shadow: 0 0 20px var(--danger); }
+        .hotspot.med::before { background: var(--warning); box-shadow: 0 0 20px var(--warning); }
+        .hotspot.low::before { background: var(--success); box-shadow: 0 0 20px var(--success); }
+        
+        @keyframes pulse-hotspot { 0% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(2.5); opacity: 0; } 100% { transform: scale(1); opacity: 0; } }
+        
+        .hotspot-label { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 1px solid var(--border-subtle); padding: 4px 10px; border-radius: 6px; font-size: 10px; white-space: nowrap; color: white; opacity: 0; transition: 0.3s; }
+        .hotspot:hover .hotspot-label { opacity: 1; top: -40px; }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="avatar-container">
+                <div class="avatar">AD</div>
+                <div class="online-dot"></div>
+            </div>
+            <div>
+                <div style="font-weight: bold; color: white;">Administrator</div>
+                <div class="role-badge">SUPER ADMIN</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="admin-dashboard.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                <span>Control Center</span>
+            </a>
+            <a href="admin-complaints.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                <span>All Complaints</span>
+            </a>
+            <a href="admin-users.html" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <span>User Management</span>
+            </a>
+            <a href="admin-heatmap.html" class="nav-item active">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                <span>Crime Heatmap</span>
+            </a>
+            <div class="nav-divider"></div>
+            <a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-item">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                <span>System Exit</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="breadcrumb">
+                <span class="breadcrumb-item">Admin</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item active">Crime Heatmap</span>
+            </div>
+            <div class="sys-time" id="sysTime"></div>
+        </header>
+
+        <div class="content-container">
+            <div class="heatmap-container">
+                <div class="map-header">
+                    <h3 class="map-title">📍 GEOSPATIAL CRIME DENSITY - NATIONWIDE VIEW</h3>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-action" style="background:var(--neon-primary); color:white; border:none; padding:8px 16px;">LIVE FEED ON</button>
+                        <button class="btn-action">EXPORT DATA</button>
+                    </div>
+                </div>
+                
+                <div class="map-view">
+                    <div class="map-overlay">
+                        <!-- Simulated Hotspots -->
+                        <div class="hotspot high" style="top: 30%; left: 40%;">
+                            <div class="hotspot-label">New Delhi: 1,452 Cases</div>
+                        </div>
+                        <div class="hotspot high" style="top: 65%; left: 25%;">
+                            <div class="hotspot-label">Mumbai: 2,104 Cases</div>
+                        </div>
+                        <div class="hotspot med" style="top: 75%; left: 45%;">
+                            <div class="hotspot-label">Bangalore: 843 Cases</div>
+                        </div>
+                        <div class="hotspot low" style="top: 40%; left: 70%;">
+                            <div class="hotspot-label">Kolkata: 312 Cases</div>
+                        </div>
+                        <div class="hotspot med" style="top: 85%; left: 35%;">
+                            <div class="hotspot-label">Chennai: 621 Cases</div>
+                        </div>
+                        <div class="hotspot low" style="top: 20%; left: 20%;">
+                            <div class="hotspot-label">Ahmedabad: 156 Cases</div>
+                        </div>
+                    </div>
+                    
+                    <div class="map-legend">
+                        <div class="legend-title">Risk Severity</div>
+                        <div class="legend-row"><div class="l-dot" style="background:var(--danger)"></div> High Risk (>1000)</div>
+                        <div class="legend-row"><div class="l-dot" style="background:var(--warning)"></div> Moderate (500-1000)</div>
+                        <div class="legend-row"><div class="l-dot" style="background:var(--success)"></div> Low Risk (<500)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+    if (!guardPage('admin')) { }
+
+    setInterval(() => {
+        document.getElementById('sysTime').innerText = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+    }, 1000);
+</script>
+</body>
+</html>

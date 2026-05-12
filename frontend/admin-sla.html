@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="admin">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLA Monitor - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: var(--sidebar-bg); border-right: 1px solid var(--border-subtle); position: fixed; height: 100vh; z-index: 100; padding: 24px 0; }
+        .main-content { margin-left: 260px; flex: 1; padding: 24px; }
+        .sla-card { display: flex; align-items: center; justify-content: space-between; padding: 20px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px; margin-bottom: 16px; transition: 0.3s; }
+        .sla-card.critical { border-color: #ef4444; background: rgba(239,68,68,0.05); }
+        .timer { font-family:'JetBrains Mono'; font-size: 1.5rem; font-weight: bold; color: var(--neon-cyan); }
+        .critical .timer { color: #ef4444; animation: blink 1s infinite; }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div style="padding: 0 24px 24px; font-weight: bold; font-family:'Orbitron';">SCS ADMIN</div>
+        <nav>
+            <a href="admin-dashboard.html" class="nav-item"><span>Control Center</span></a>
+            <a href="admin-sla.html" class="nav-item active"><span>SLA Monitor</span></a>
+            <a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-item"><span>Logout</span></a>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <h2 style="font-family:'Orbitron'; margin-bottom: 32px;">LIVE SLA MONITORING</h2>
+        <div id="slaContainer">
+            <!-- Simulated SLA Cards -->
+            <div class="sla-card">
+                <div>
+                    <div style="font-weight:bold; color:white;">COMP-2026-A1B2 (Payment Fraud)</div>
+                    <div class="muted">Assigned to: Officer Sharma</div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="timer">04:12:45</div>
+                    <div class="muted">Time to Breach</div>
+                </div>
+            </div>
+            <div class="sla-card critical">
+                <div>
+                    <div style="font-weight:bold; color:white;">COMP-2026-C3D4 (Hacking)</div>
+                    <div class="muted">Assigned to: Officer Khan</div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="timer">00:08:12</div>
+                    <div style="color:#ef4444; font-weight:bold;">CRITICAL BREACH NEAR</div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+    if (!guardPage('admin')) { }
+    // Simulated Timer Update
+    setInterval(() => {
+        document.querySelectorAll('.timer').forEach(t => {
+            let parts = t.innerText.split(':').map(Number);
+            let total = parts[0]*3600 + parts[1]*60 + parts[2];
+            if(total > 0) total--;
+            let h = Math.floor(total/3600).toString().padStart(2,'0');
+            let m = Math.floor((total%3600)/60).toString().padStart(2,'0');
+            let s = (total%60).toString().padStart(2,'0');
+            t.innerText = `${h}:${m}:${s}`;
+        });
+    }, 1000);
+</script>
+</body>
+</html>

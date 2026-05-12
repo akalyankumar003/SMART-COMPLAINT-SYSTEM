@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complaint Details - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background: rgba(0,5,30,0.95); backdrop-filter: blur(20px); border-right: 1px solid var(--border-neon); position: fixed; height: 100vh; z-index: 100; padding: 20px 0; }
+        .sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid rgba(0,200,255,0.15); display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple)); display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-weight: bold; }
+        .nav-item { list-style: none; margin-bottom: 4px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px 20px; color: var(--text-secondary); text-decoration: none; transition: 0.2s; }
+        .nav-link.active { border-left: 4px solid var(--neon-cyan); background: rgba(0,212,255,0.1); color: white; }
+        
+        .main-content { margin-left: 280px; flex: 1; padding: 24px; }
+        .topbar { height: 64px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,200,255,0.15); margin-bottom: 24px; padding-bottom: 20px; }
+        
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .id-badge { font-family: 'JetBrains Mono'; font-size: 2rem; color: var(--neon-cyan); text-shadow: 0 0 10px rgba(0,212,255,0.5); }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .info-table { width: 100%; border-collapse: collapse; }
+        .info-table td { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .info-table td:first-child { color: var(--text-muted); width: 35%; }
+        
+        .timeline { list-style: none; padding: 0; margin: 0; }
+        .timeline-item { position: relative; padding-left: 32px; padding-bottom: 24px; }
+        .timeline-item::before { content:''; position:absolute; left:5px; top:0; bottom:0; width:2px; background:rgba(0,212,255,0.3); }
+        .timeline-item:last-child::before { display: none; }
+        .timeline-marker { position:absolute; left:0; top:0; width:12px; height:12px; border-radius:50%; background:var(--neon-cyan); box-shadow:0 0 10px var(--neon-cyan); }
+        .timeline-item.future .timeline-marker { background: #333; box-shadow: none; }
+        
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
+        .status-badge.pending { background: rgba(255,170,0,0.2); border: 1px solid #ffaa00; color: #ffaa00; }
+        .status-badge.resolved { background: rgba(0,255,136,0.2); border: 1px solid #00ff88; color: #00ff88; }
+        .status-badge.withdrawn { background: rgba(255,255,255,0.1); border: 1px solid #999; color: #999; }
+        
+        .btn-group { display: flex; gap: 12px; margin-top: 24px; }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="avatar" id="userInitials">US</div>
+            <div>
+                <div style="font-weight: bold;" id="userNameDisplay">User</div>
+                <div style="color: #00ff88; font-size: 0.8rem;">● Online</div>
+            </div>
+        </div>
+        <ul>
+            <li class="nav-item"><a href="dashboard.html" class="nav-link">🏠 Dashboard</a></li>
+            <li class="nav-item"><a href="file-complaint.html" class="nav-link">📝 File Complaint</a></li>
+            <li class="nav-item"><a href="my-complaints.html" class="nav-link active">📋 My Complaints</a></li>
+            <li class="nav-item"><a href="analytics.html" class="nav-link">📊 Analytics</a></li>
+            <li class="nav-item"><a href="chat.html" class="nav-link">💬 Chat Support</a></li>
+            <li class="nav-item"><a href="forum.html" class="nav-link">🏛️ Forum</a></li>
+            <li class="nav-item"><a href="profile.html" class="nav-link">👤 Profile</a></li>
+            <li class="nav-item"><a href="notifications.html" class="nav-link">🔔 Notifications</a></li>
+            <li class="nav-item"><a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-link">🚪 Logout</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="muted">Home > My Complaints > <span id="bcId"></span></div>
+        </header>
+
+        <div class="header-row animate-fade-in-up">
+            <div class="id-badge" id="cId">Loading...</div>
+            <div id="cStatus"></div>
+        </div>
+
+        <div class="grid-2 animate-fade-in-up" style="animation-delay: 0.2s;">
+            <div class="card">
+                <h3 style="margin-bottom: 16px; font-family:'Orbitron';">COMPLAINT INFORMATION</h3>
+                <table class="info-table" id="infoTable">
+                    <!-- Populated by JS -->
+                </table>
+                
+                <h3 style="margin-top: 32px; margin-bottom: 16px; font-family:'Orbitron';">DESCRIPTION</h3>
+                <p id="cDesc" style="color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap;"></p>
+                
+                <div id="ratingSection" style="display:none; margin-top:32px; padding:20px; background:rgba(0,255,136,0.05); border:1px solid var(--success); border-radius:12px;">
+                    <h3 style="font-family:'Orbitron'; font-size:1rem; margin-bottom:12px;">HOW WAS YOUR EXPERIENCE?</h3>
+                    <div style="display:flex; gap:12px; margin-bottom:16px;">
+                        <button class="btn-outline" onclick="submitRating(1)">⭐</button>
+                        <button class="btn-outline" onclick="submitRating(2)">⭐⭐</button>
+                        <button class="btn-outline" onclick="submitRating(3)">⭐⭐⭐</button>
+                        <button class="btn-outline" onclick="submitRating(4)">⭐⭐⭐⭐</button>
+                        <button class="btn-outline" onclick="submitRating(5)">⭐⭐⭐⭐⭐</button>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn-primary" id="btnDownloadReceipt">📥 DOWNLOAD RECEIPT</button>
+                    <button class="btn-outline" id="withdrawBtn" style="border-color:#ff006e; color:#ff006e; display:none;">🗑️ WITHDRAW</button>
+                    <button class="btn-outline" id="sosBtn" style="border-color:#ef4444; color:#ef4444; background: rgba(239,68,68,0.1);">🚨 SOS ESCALATE</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 24px; font-family:'Orbitron';">CASE PROGRESS</h3>
+                <ul class="timeline" id="cTimeline">
+                    <!-- Populated by JS -->
+                </ul>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+    if (!guardPage('user')) { /* stops execution */ }
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const complaintId = urlParams.get('id');
+
+    async function loadComplaint() {
+        if (!complaintId) return;
+        
+        try {
+            const c = await apiCall(`/complaints/${complaintId}`);
+            
+            document.getElementById('bcId').innerText = c.complaintId;
+            document.getElementById('cId').innerText = c.complaintId;
+            document.getElementById('cStatus').innerHTML = `<span class="status-badge ${c.status.toLowerCase()}">${c.status}</span>`;
+            
+            document.getElementById('infoTable').innerHTML = `
+                <tr><td>Category</td><td class="white">${c.category}</td></tr>
+                <tr><td>Title</td><td class="white">${escapeHtml(c.title)}</td></tr>
+                <tr><td>Date of Incident</td><td class="white">${new Date(c.incidentDate).toLocaleString()}</td></tr>
+                <tr><td>Platform</td><td class="white">${c.platform}</td></tr>
+                <tr><td>Financial Loss</td><td class="white">₹${c.financialLoss}</td></tr>
+                <tr><td>Priority</td><td class="white">${c.priority}</td></tr>
+            `;
+            
+            document.getElementById('cDesc').innerText = c.description;
+            
+            if (c.status === 'Resolved' && !c.rating) {
+                document.getElementById('ratingSection').style.display = 'block';
+            }
+            
+            if (c.status === 'Pending' || c.status === 'Under Review') {
+                const wbtn = document.getElementById('withdrawBtn');
+                wbtn.style.display = 'block';
+                wbtn.onclick = async () => {
+                    if(confirm("Are you sure you want to withdraw this complaint?")) {
+                        await apiCall(`/complaints/${c._id}/withdraw`, { method: 'PUT' });
+                        window.location.reload();
+                    }
+                };
+            }
+            
+            const tlist = document.getElementById('cTimeline');
+            tlist.innerHTML = '';
+            c.statusHistory.forEach(h => {
+                const li = document.createElement('li');
+                li.className = 'timeline-item';
+                li.innerHTML = `
+                    <div class="timeline-marker"></div>
+                    <div style="font-weight:bold; color:white;">${h.status}</div>
+                    <div class="muted" style="font-size:0.8rem;">${new Date(h.updatedAt).toLocaleString()}</div>
+                    ${h.note ? `<div style="font-style:italic; font-size:0.9rem; margin-top:8px; padding:8px; background:rgba(255,255,255,0.05); border-radius:4px;">${h.note}</div>` : ''}
+                `;
+                tlist.appendChild(li);
+            });
+            
+            document.getElementById('btnDownloadReceipt').onclick = () => {
+                const reportContent = `
+SMART COMPLAINT SYSTEM - OFFICIAL RECEIPT
+-------------------------------------------
+CASE ID    : ${c.complaintId}
+STATUS     : ${c.status}
+FILED ON   : ${new Date(c.createdAt).toLocaleString()}
+CATEGORY   : ${c.category}
+TITLE      : ${c.title}
+LOSS       : ₹${c.financialLoss}
+
+DESCRIPTION:
+${c.description}
+
+This is a computer-generated receipt.
+-------------------------------------------
+Generated on: ${new Date().toLocaleString()}
+                `;
+                const blob = new Blob([reportContent], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Receipt_${c.complaintId}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            };
+            
+            };
+
+            window.submitRating = async (r) => {
+                try {
+                    await apiCall(`/complaints/${c._id}/rating`, { method: 'POST', body: JSON.stringify({ rating: r }) });
+                    showToast('Thank you for your feedback!', 'success');
+                    document.getElementById('ratingSection').style.display = 'none';
+                } catch(e) { showToast('Failed to submit rating', 'error'); }
+            };
+
+            document.getElementById('sosBtn').onclick = () => {
+                if(confirm("This will immediately ping a Senior Supervisor about the delay. Proceed?")) {
+                    showToast('SOS ALERT SENT TO SUPERVISOR', 'warning');
+                    document.getElementById('sosBtn').disabled = true;
+                    document.getElementById('sosBtn').innerText = '🚨 ESCALATED';
+                }
+            };
+            
+        } catch(e) {
+            showToast('Failed to load details', 'error');
+        }
+    }
+    
+    loadComplaint();
+</script>
+</body>
+</html>

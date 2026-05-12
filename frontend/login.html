@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .login-layout { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+        .hero-side { position: relative; overflow: hidden; }
+        .hero-content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; padding: 40px; text-align: center; }
+        .hero-content h1 { font-size: 2.5rem; margin-bottom: 16px; color: var(--neon-cyan); }
+        .hero-content p { color: var(--text-secondary); font-size: 1.2rem; margin-bottom: 40px; }
+        .feature-cards { width: 100%; max-width: 400px; position: relative; height: 120px; }
+        .feature-card { position: absolute; inset: 0; opacity: 0; transition: opacity 0.5s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .feature-card.active { opacity: 1; }
+        .feature-card h3 { color: var(--neon-cyan); margin-bottom: 8px; }
+        
+        .form-side { display: flex; align-items: center; justify-content: center; background: rgba(0,0,50,0.3); backdrop-filter: blur(10px); flex-direction: column; padding: 20px;}
+        .login-card { max-width: 460px; width: 100%; }
+        .login-card h2 { color: var(--neon-cyan); text-align: center; font-size: 2rem; margin-bottom: 8px; animation: glow-text 2s infinite; }
+        .login-card p.subtitle { text-align: center; color: var(--text-muted); margin-bottom: 32px; }
+        .form-actions { margin-top: 24px; }
+        .btn-full { width: 100%; margin-bottom: 16px; }
+        .or-divider { display: flex; align-items: center; text-align: center; margin: 24px 0; color: var(--text-muted); }
+        .or-divider::before, .or-divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-neon); }
+        .or-divider:not(:empty)::before { margin-right: .25em; }
+        .or-divider:not(:empty)::after { margin-left: .25em; }
+        .google-btn { background: #333; color: white; border: none; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px; border-radius: 8px; cursor: not-allowed; opacity: 0.7; }
+        .bottom-links { text-align: center; margin-top: 24px; font-size: 0.9rem; }
+        .role-switch { margin-top: 32px; display: flex; gap: 16px; }
+        #particles { position: absolute; inset: 0; z-index: 1; }
+        
+        @media (max-width: 768px) {
+            .login-layout { grid-template-columns: 1fr; }
+            .hero-side { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-layout">
+    <div class="hero-side">
+        <canvas id="particles"></canvas>
+        <div class="hero-content">
+            <h1 class="animate-slide-in-left">SMART COMPLAINT SYSTEM</h1>
+
+            
+            <div class="feature-cards card">
+                <div class="feature-card active">
+                    <h3>AI-Powered Filing</h3>
+                    <p>Smart categorization and analysis of your complaint.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Real-Time Tracking</h3>
+                    <p>Live updates on your complaint status.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Secure Evidence Upload</h3>
+                    <p>Encrypted file storage and forensic analysis.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="form-side">
+        <div class="card login-card">
+            <h2>SECURE LOGIN</h2>
+            <p class="subtitle">Access your Smart Complaint System account</p>
+            
+            <form id="loginForm" data-admin="false">
+                <div class="form-group has-icon">
+                    <span class="form-icon">👤</span>
+                    <input type="text" id="identifier" placeholder="Email or Username" required>
+                </div>
+                <div class="form-group has-icon">
+                    <span class="form-icon">🔒</span>
+                    <input type="password" id="password" placeholder="Password" required>
+                    <button type="button" id="togglePassword" style="position:absolute; right:12px; top:38px; background:none; border:none; color:var(--text-muted); cursor:pointer;">👁️</button>
+                </div>
+                <div style="text-align: right; margin-bottom: 24px;">
+                    <a href="#" style="font-size: 0.9rem;">Forgot Password?</a>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary btn-full">LOGIN</button>
+                </div>
+                
+                <div class="or-divider">OR</div>
+                
+                <button type="button" class="google-btn" disabled title="Coming Soon">
+                    <span>G</span> Continue with Google
+                </button>
+                
+                <div class="bottom-links">
+                    Don't have an account? <a href="register.html">Register here</a>
+                </div>
+            </form>
+        </div>
+        
+        <div class="role-switch">
+            <button class="btn-primary" disabled style="opacity: 1; cursor: default;">USER LOGIN</button>
+            <button class="btn-outline" style="border-color: var(--neon-purple); color: var(--neon-purple);" onclick="window.location.href='admin-login.html'">ADMIN LOGIN</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script>
+    // Feature cards rotation
+    const cards = document.querySelectorAll('.feature-card');
+    let currentCard = 0;
+    setInterval(() => {
+        cards[currentCard].classList.remove('active');
+        currentCard = (currentCard + 1) % cards.length;
+        cards[currentCard].classList.add('active');
+    }, 2500);
+
+    // Particle background
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth / 2;
+    let height = canvas.height = window.innerHeight;
+    
+    window.addEventListener('resize', () => {
+        if(window.innerWidth > 768) {
+            width = canvas.width = window.innerWidth / 2;
+            height = canvas.height = window.innerHeight;
+        }
+    });
+
+    const particlesArray = [];
+    for(let i=0; i<80; i++) {
+        particlesArray.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            vx: (Math.random() - 0.5) * 1,
+            vy: (Math.random() - 0.5) * 1,
+            size: Math.random() * 2 + 1,
+            color: Math.random() > 0.5 ? '#00d4ff' : '#7b2fff'
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, width, height);
+        particlesArray.forEach((p, i) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            if(p.x < 0 || p.x > width) p.vx *= -1;
+            if(p.y < 0 || p.y > height) p.vy *= -1;
+            
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+            
+            for(let j=i+1; j<particlesArray.length; j++) {
+                const p2 = particlesArray[j];
+                const dx = p.x - p2.x;
+                const dy = p.y - p2.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if(dist < 120) {
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.strokeStyle = \`rgba(0, 212, 255, \${1 - dist/120})\`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+        });
+        requestAnimationFrame(draw);
+    }
+    draw();
+</script>
+</body>
+</html>

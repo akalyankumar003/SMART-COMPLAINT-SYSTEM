@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Tracker - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 280px; background: rgba(0,5,30,0.95); backdrop-filter: blur(20px); border-right: 1px solid var(--border-neon); position: fixed; height: 100vh; z-index: 100; padding: 20px 0; }
+        .main-content { margin-left: 280px; flex: 1; padding: 24px; }
+        .tracker-card { background: var(--bg-card); border: 1px solid var(--border-neon); border-radius: 16px; padding: 32px; max-width: 800px; margin: 0 auto; }
+        .progress-line { display: flex; justify-content: space-between; position: relative; margin-bottom: 40px; padding: 0 40px; }
+        .progress-line::before { content: ''; position: absolute; top: 15px; left: 60px; right: 60px; height: 3px; background: rgba(255,255,255,0.1); z-index: 1; }
+        .dot { width: 32px; height: 32px; border-radius: 50%; background: #333; border: 2px solid #555; position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; }
+        .dot.active { background: var(--neon-cyan); border-color: var(--neon-cyan); box-shadow: 0 0 15px var(--neon-cyan); color: black; }
+        .dot.completed { background: #00ff88; border-color: #00ff88; color: black; }
+        .label { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; white-space: nowrap; color: var(--text-muted); }
+        .dot.active + .label { color: var(--neon-cyan); font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div style="padding: 0 20px 20px; font-weight: bold; font-family:'Orbitron';">SCS PORTAL</div>
+        <ul>
+            <li class="nav-item"><a href="dashboard.html" class="nav-link">🏠 Dashboard</a></li>
+            <li class="nav-item"><a href="user-tracker.html" class="nav-link active">📍 Live Tracker</a></li>
+            <li class="nav-item"><a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-link">🚪 Logout</a></li>
+        </ul>
+    </aside>
+    <main class="main-content">
+        <h2 style="font-family:'Orbitron'; margin-bottom: 32px; text-align:center;">LIVE COMPLAINT TRACKER</h2>
+        <div class="tracker-card animate-fade-in-up">
+            <div style="margin-bottom: 32px; text-align:center;">
+                <p class="muted">Enter Case ID to track live progress</p>
+                <div style="display:flex; gap:12px; max-width:400px; margin: 16px auto;">
+                    <input type="text" id="trackId" placeholder="e.g. COMP-2026-X1Y2" style="flex:1;">
+                    <button class="btn-primary" onclick="trackComplaint()">TRACK</button>
+                </div>
+            </div>
+            
+            <div id="trackerDisplay" style="display:none;">
+                <div class="progress-line">
+                    <div class="dot completed" id="d1">✓<span class="label">SUBMITTED</span></div>
+                    <div class="dot active" id="d2">2<span class="label">REVIEW</span></div>
+                    <div class="dot" id="d3">3<span class="label">INVESTIGATION</span></div>
+                    <div class="dot" id="d4">4<span class="label">RESOLUTION</span></div>
+                </div>
+                <div id="trackerInfo" style="background: rgba(255,255,255,0.03); padding: 24px; border-radius: 12px; border-left: 4px solid var(--neon-cyan);">
+                    <h4 id="tTitle" style="color:white; margin-bottom:8px;">Complaint Title</h4>
+                    <p id="tStatus" style="color:var(--neon-cyan); font-weight:bold; margin-bottom:16px;">UNDER REVIEW</p>
+                    <div class="muted" style="font-size:0.9rem;">Last Updated: <span id="tTime">Today, 10:45 AM</span></div>
+                    <div class="muted" style="font-size:0.9rem; margin-top:8px;">Officer Note: <span id="tNote">Officer assigned. Verification in progress.</span></div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+    if (!guardPage('user')) { }
+    async function trackComplaint() {
+        const id = document.getElementById('trackId').value;
+        if(!id) return;
+        try {
+            const complaints = await apiCall('/complaints?limit=100');
+            const c = complaints.find(x => x.complaintId === id);
+            if(!c) { showToast('Complaint not found', 'error'); return; }
+            
+            document.getElementById('trackerDisplay').style.display = 'block';
+            document.getElementById('tTitle').innerText = c.title;
+            document.getElementById('tStatus').innerText = c.status.toUpperCase();
+            
+            const steps = { 'Pending': 1, 'Under Review': 2, 'In Progress': 3, 'Resolved': 4 };
+            const current = steps[c.status] || 1;
+            
+            for(let i=1; i<=4; i++) {
+                const dot = document.getElementById('d'+i);
+                dot.className = 'dot';
+                if(i < current) { dot.classList.add('completed'); dot.innerHTML = '✓<span class="label">'+dot.querySelector('.label').innerText+'</span>'; }
+                else if(i === current) { dot.classList.add('active'); dot.innerHTML = i+'<span class="label">'+dot.querySelector('.label').innerText+'</span>'; }
+                else { dot.innerHTML = i+'<span class="label">'+dot.querySelector('.label').innerText+'</span>'; }
+            }
+        } catch(e) { showToast('Error tracking complaint', 'error'); }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const idParam = params.get('id');
+        if (idParam) {
+            document.getElementById('trackId').value = idParam;
+            trackComplaint();
+        }
+    });
+</script>
+</body>
+</html>

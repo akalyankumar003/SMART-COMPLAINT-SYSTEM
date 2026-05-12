@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="admin">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Profile - Smart Complaint System</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <style>
+        .layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: var(--sidebar-bg); border-right: 1px solid var(--border-subtle); position: fixed; height: 100vh; z-index: 100; padding: 24px 0; }
+        .main-content { margin-left: 260px; flex: 1; padding: 24px; }
+        .profile-container { max-width: 800px; margin: 0 auto; }
+        .avatar-edit { width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary)); display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 24px; position: relative; cursor: pointer; border: 4px solid var(--border-subtle); }
+        .avatar-edit:hover::after { content: 'EDIT'; position: absolute; inset: 0; background: rgba(0,0,0,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-family: 'Orbitron'; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    </style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+        <div style="padding: 0 24px 24px; font-weight: bold; font-family:'Orbitron';">SCS ADMIN</div>
+        <nav>
+            <a href="admin-dashboard.html" class="nav-item"><span>Control Center</span></a>
+            <a href="admin-profile.html" class="nav-item active"><span>My Profile</span></a>
+            <a href="javascript:void(0)" onclick="localStorage.clear(); window.location.href='index.html'" class="nav-item"><span>Logout</span></a>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <div class="profile-container">
+            <h2 style="font-family:'Orbitron'; margin-bottom: 32px;">ADMIN PROFILE</h2>
+            <div class="card">
+                <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:40px;">
+                    <div class="avatar-edit" id="avatarDisplay">AD</div>
+                    <input type="file" id="avatarInput" style="display:none;" accept="image/*">
+                    <p class="muted">Click to change profile picture</p>
+                </div>
+                <form id="profileForm">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Full Name</label><input type="text" id="pFullName" required></div>
+                        <div class="form-group"><label>Email</label><input type="email" id="pEmail" required></div>
+                        <div class="form-group"><label>Username</label><input type="text" id="pUsername" readonly></div>
+                        <div class="form-group"><label>Role</label><input type="text" value="Super Admin" readonly></div>
+                    </div>
+                    <div style="margin-top:32px;">
+                        <button type="submit" class="btn-primary" style="width: 200px;">SAVE CHANGES</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+    if (!guardPage('admin')) { }
+    const user = JSON.parse(localStorage.getItem('scs_user'));
+    document.getElementById('pFullName').value = user.fullName;
+    document.getElementById('pEmail').value = user.email;
+    document.getElementById('pUsername').value = user.username;
+    document.getElementById('avatarDisplay').innerText = user.fullName.substring(0,2).toUpperCase();
+
+    document.getElementById('avatarDisplay').onclick = () => document.getElementById('avatarInput').click();
+    
+    document.getElementById('profileForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const data = {
+            fullName: document.getElementById('pFullName').value,
+            email: document.getElementById('pEmail').value
+        };
+        try {
+            await apiCall('/admin/profile', { method: 'PUT', body: JSON.stringify(data) });
+            user.fullName = data.fullName;
+            user.email = data.email;
+            localStorage.setItem('scs_user', JSON.stringify(user));
+            showToast('Profile updated successfully', 'success');
+        } catch(e) { showToast('Update failed', 'error'); }
+    };
+</script>
+</body>
+</html>
